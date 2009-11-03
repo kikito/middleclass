@@ -4,23 +4,6 @@
 -- Based on YaciCode, from Julien Patte and LuaObject, from Sébastien Rocca-Serra
 -----------------------------------------------------------------------------------
 
-do
-
-local function getSuper(superclass, symbol)
-    return function(self, ...)
-               print(superclass.name .. '.' .. symbol)
-               return superclass[symbol](self, ...)
-           end
-end
-
-local function addSuper(superclass, symbol, method)
-    local fenv = getfenv(method)
-    fenv.super = getSuper(superclass, symbol)
-    --return setfenv(method, setmetatable(
-    --                   {super = getSuper(superclass, symbol)},
-    --                   {__index = fenv, __newindex = fenv}))
-end
-
 -- The 'Object' class
 Object = {
   name = "Object",
@@ -110,6 +93,4 @@ setmetatable(Object, {
 function class(name, baseClass)
   baseClass = baseClass or Object
   return baseClass:subclass(name)
-end
-
 end
