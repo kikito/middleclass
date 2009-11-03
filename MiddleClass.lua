@@ -6,103 +6,110 @@
 
 do
 
--- returns a copy of table t (shallow copy: only level 1 is copied, non-recursive)
-local function duplicate(origin, destination, keys)
-  -- no keys provided - duplicate all keys
-  if keys==nil then for key,value in pairs(origin) do destination[key] = value end
-  else for _,key in pairs(keys) do destination[key] = origin[key] end
-  end
-  return destination
+local function getSuper(superclass, symbol)
+    return function(self, ...)
+               print(superclass.name .. '.' .. symbol)
+               return superclass[symbol](self, ...)
+           end
 end
 
------------------------------------------------------------------------------------
+local function addSuper(superclass, symbol, method)
+    local fenv = getfenv(method)
+    fenv.super = getSuper(superclass, symbol)
+    --return setfenv(method, setmetatable(
+    --                   {super = getSuper(superclass, symbol)},
+    --                   {__index = fenv, __newindex = fenv}))
+end
+
 -- The 'Object' class
 Object = {
   name = "Object",
-  superClass = nil,
-  subClassOf = function(class, other) return false end, -- Object inherits from nothing
+  superclass = nil,
+  subclassOf = function(class, other) return false end, -- Object inherits from nothing
+  __tostring = function(instance) return ("instance of ".. instance.class.name) end,
 
+  -- Inverse of instance.instanceOf(class). This never fails - class.made(1) will return false,
+  -- but 1.instanceOf(class) will return an error
   made = function(class, obj)
     if type(obj)~="table" or type(obj.class)~="table" then return false end
     local c = obj.class
     if c==class then return true end
-    if type(c)~="table" or type(c.subClassOf)~="function" then return false end
-    return c:subClassOf(class)
+    if type(c)~="table" or type(c.subclassOf)~="function" then return false end
+    return c:subclassOf(class)
   end,
 
+  -- create a new instance
   new = function (class, ...)
-    local instance = setmetatable({ class = class }, { __index = class.instanceMethods })
+    local instance = setmetatable({ class = class }, class) -- the class is the instance's metatable
     instance:init(...)
     return instance
   end,
-  
-  subClass = function(baseClass, name)
+
+  -- creates a subclass
+  subclass = function(superclass, name)
     if type(name)~="string" then name = "Unnamed" end
     
     local theClass = {
       name = name,
-      superClass = baseClass,
-      subClassOf = function (class, other) return (baseClass==other or baseClass:subClassOf(other)) end,
-      instanceMethods = {}
+      superclass = superclass,
+      subclassOf = function(class, other) return (superclass==other or superclass:subclassOf(other)) end
     }
 
-    duplicate(baseClass, theClass, {'includes', 'new', 'made', 'subClass'})
+    -- This may sound weird. Since:
+    -- a) the class is the instances' metatable (so it must have an __index for looking up the methods) and
+    -- b) The instance methods are in theClass, then ...
+    theClass.__index = theClass
 
-    duplicate(baseClass.instanceMethods, theClass.instanceMethods, {
-      '__add', '__call', '__concat', '__div', '__eq', '__le', '__len', '__lt',
-      '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm'
-    })
-    
-    setmetatable(theClass.instanceMethods, {__index = baseClass}) -- if a method is not found on instanceMethods, look on baseClass
-
+    -- additionally, set the metatable for theClass
     setmetatable(theClass, {
-      __index = theClass.instanceMethods, -- if a method is not found, look on "instanceMethods"
-      __newindex = function(class, methodName, method) -- add new items to the "instanceMethods" attribute, building "super" at the same time
+      __index = superclass, -- classes look up methods on their superclass
+      __newindex = function(class, methodName, method) -- when adding new methods, include a "super" function
         if type(method) == 'function' then
-          local superMethod = function(self, ...) return baseClass.instanceMethods[methodName](self, ...) end
+          print('adding super to ' .. class.name .. '.' .. methodName)
+          local superFunc = function(self, ...) 
+            print(superclass.name .. '.' ..methodName)
+            return superclass[methodName](self, ...)
+          end
           local fenv = getfenv(method)
-          local newEnv = setmetatable( { super = superMethod }, {__index = fenv, __newindex = fenv} )
-          setfenv( method, newEnv )
+          local newenv = setmetatable({super = superFunc}, {__index = fenv, __newindex = fenv})
+          method = setfenv(method, newenv)
         end
-        rawset(class.instanceMethods, methodName, method)
+        rawset(class, methodName, method)
       end,
       __tostring = function() return ("class ".. name) end,
-      __call = newInstance
+      __call = theClass.new
     })
     
-    theClass.instanceMethods.init = function (instance,...) super(self) end
+    -- instance methods go after the setmetatable, so we can use "super"
+    theClass.init = function(instance,...) super(self) end
+    theClass.instanceOf = function(instance, class) return class:made(instance) end
 
     return theClass
   end,
   
-  -- Extension function - similar to ruby's include for modules
-  -- adds the methods of t to the class
-  -- will invoke the included method if present
-  includes = function(self, t)
-    duplicate(t, self)
-    if t.included~=nil then t:included(self) end
-  end
-}
+  -- Mixin extension function - simulates very basically ruby's include(module)
+  -- module is a lua table of functions. The functions will be copied to the class
+  -- if present in the module, the included() method will be called
+  includes = function(self, module)
+    for methodName,method in pairs(module) do
+      if methodName ~="included" then self[methodName] = method end
+    end
+    if type(module.included)=="function" then module:included(self) end
+  end,
 
-Object.instanceMethods = {
+  -- end of the init() call chain
   init = function(instance, ...) end
 }
-
-setmetatable(Object.instanceMethods, {
-  __tostring = function (instance) return ("a ".. instance.class.name) end
-})
 
 setmetatable(Object, {
   __tostring = function() return ("class Object") end,
   __call = newInstance
 })
 
-----------------------------------------------------------------------
--- function 'class'
+
 function class(name, baseClass)
   baseClass = baseClass or Object
-  return baseClass:subClass(name)
+  return baseClass:subclass(name)
 end
 
 end
--- end of code
