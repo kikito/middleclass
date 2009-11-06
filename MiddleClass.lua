@@ -4,91 +4,95 @@
 -- Based on YaciCode, from Julien Patte and LuaObject, from Sébastien Rocca-Serra
 -----------------------------------------------------------------------------------
 
+local classes = setmetatable({}, {__mode = "k"})   -- weak table storing references to all declared classes
+
 -- The 'Object' class
-Object = {
-  name = "Object",
-  superclass = nil,
-  subclassOf = function(class, other) return false end, -- Object inherits from nothing
-  __tostring = function(instance) return ("instance of ".. instance.class.name) end,
-
-  -- Inverse of instance.instanceOf(class). This never fails - class.made(1) will return false,
-  -- but 1.instanceOf(class) will return an error
-  made = function(class, obj)
-    if type(obj)~="table" or type(obj.class)~="table" then return false end
-    local c = obj.class
-    if c==class then return true end
-    if type(c)~="table" or type(c.subclassOf)~="function" then return false end
-    return c:subclassOf(class)
-  end,
-
-  -- create a new instance
-  new = function (class, ...)
-    local instance = setmetatable({ class = class }, class) -- the class is the instance's metatable
+Object = { name = "Object",
+  -- creates a new instance
+  new = function(class, ...)
+    assert(classes[class]~=nil, "Use class:new instead of class.new")
+    --FIXME add events here
+    local instance = setmetatable({ class = class }, class.__classDict) -- the class dictionary is the instance's metatable
     instance:init(...)
     return instance
   end,
 
   -- creates a subclass
-  subclass = function(superclass, name)
+  function Object.subclass(superclass, name)
+    assert(classes[superclass]~=nil, "Use class:subclass instead of class.subclass")
     if type(name)~="string" then name = "Unnamed" end
-    
-    local theClass = {
-      name = name,
-      superclass = superclass,
-      subclassOf = function(class, other) return (superclass==other or superclass:subclassOf(other)) end
-    }
 
-    -- This may sound weird. Since:
-    -- a) the class is the instances' metatable (so it must have an __index for looking up the methods) and
-    -- b) The instance methods are in theClass, then ...
-    theClass.__index = theClass
+    local theClass = { name = name, superclass = superclass, __classDict = {} }
+    local classDict = theClass.__classDict
 
-    -- additionally, set the metatable for theClass
+    -- This one is weird. Since:
+    -- a) the class dict is the instances' metatable (so it must have an __index for looking up the methods) and
+    -- b) The instance methods are in the class dict itself, then ...
+    classDict.__index = classDict
+    -- if a method isn't found on the class dict, look on its super class
+    setmetatable(classDict, {__index = superclass.__classDict} )
+    -- theClass also needs some metamethods
     setmetatable(theClass, {
-      __index = superclass, -- classes look up methods on their superclass
-      __newindex = function(class, methodName, method) -- when adding new methods, include a "super" function
+      __index = classDict, -- this allows using classDic as a class method AND instance method dict
+      __newindex = function(_, methodName, method) -- when adding new methods, include a "super" function
         if type(method) == 'function' then
-          print('adding super to ' .. class.name .. '.' .. methodName)
-          local superFunc = function(self, ...) 
-            print(superclass.name .. '.' ..methodName)
-            return superclass[methodName](self, ...)
-          end
-          local fenv = getfenv(method)
-          local newenv = setmetatable({super = superFunc}, {__index = fenv, __newindex = fenv})
-          method = setfenv(method, newenv)
+          local super = function(instance, ...) return superclass[methodName](instance, ...) end --super function
+          local fenv = getfenv(method) -- the method's environment
+          local newenv = setmetatable( {super = super}, {__index=fenv, __newindex=fenv} ) -- the new method's env, with super
+          setfenv(method, newenv)
         end
-        rawset(class, methodName, method)
+        rawset(classDict, methodName, method)
       end,
       __tostring = function() return ("class ".. name) end,
       __call = theClass.new
     })
-    
     -- instance methods go after the setmetatable, so we can use "super"
-    theClass.init = function(instance,...) super(self) end
-    theClass.instanceOf = function(instance, class) return class:made(instance) end
+    theClass.init = function(instance,...) super(instance) end
+
+    classes[theClass]=theClass --registers the new class on the list of classes
 
     return theClass
   end,
-  
+
   -- Mixin extension function - simulates very basically ruby's include(module)
   -- module is a lua table of functions. The functions will be copied to the class
   -- if present in the module, the included() method will be called
-  includes = function(self, module)
+  includes = function(class, module)
+    assert(classes[class]~=nil, "Use class:includes instead of class.includes")
     for methodName,method in pairs(module) do
-      if methodName ~="included" then self[methodName] = method end
+      if methodName ~="included" then class[methodName] = method end
     end
-    if type(module.included)=="function" then module:included(self) end
-  end,
+    if type(module.included)=="function" then module:included(class) end
+  end
+}
 
-  -- end of the init() call chain
-  init = function(instance, ...) end
+classes[Object]=Object -- adds Object to the list of classes
+
+Object.__classDict = {
+  init = function(instance, ...) end,   -- end of the init() call chain
+  instanceOf = function(instance, class) return class:made(instance) end, --instanceOf definition (less secure than class:made)
+  __tostring = function(instance) return ("instance of ".. instance.class.name) end
 }
 
 setmetatable(Object, {
+  __index = Object.__classDict,
+  __newindex = Object.__classDict,
   __tostring = function() return ("class Object") end,
-  __call = newInstance
+  __call = Object.new
 })
 
+-- Returns true if class is a subclass of other, false otherwise
+function subclassOf(other, class)
+  if class.superclass==nil then return false end --class is Object, or a non-class
+  return class.superclass == other or class.superclass:subclassOf(other)
+end
+
+-- Returns true if obj is an instance of class (or one of its subclasses) false otherwise
+function instanceOf(class, obj)
+  if obj==nil or classes[class]==nil or classes[obj.class]==nil then return false end
+  if obj.class==class then return true end
+  return subclassOf(class, obj.class)
+end
 
 function class(name, baseClass)
   baseClass = baseClass or Object
