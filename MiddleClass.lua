@@ -18,7 +18,7 @@ Object = { name = "Object",
   end,
 
   -- creates a subclass
-  function Object.subclass(superclass, name)
+  subclass = function(superclass, name)
     assert(classes[superclass]~=nil, "Use class:subclass instead of class.subclass")
     if type(name)~="string" then name = "Unnamed" end
 
@@ -33,7 +33,11 @@ Object = { name = "Object",
     setmetatable(classDict, {__index = superclass.__classDict} )
     -- theClass also needs some metamethods
     setmetatable(theClass, {
-      __index = classDict, -- this allows using classDic as a class method AND instance method dict
+      __index = function(_,methodName)
+        local localMethod = classDict[methodName] -- this allows using classDic as a class method AND instance method dict
+        if localMethod ~= nil then return localMethod end
+        return superclass[methodName]
+      end,
       __newindex = function(_, methodName, method) -- when adding new methods, include a "super" function
         if type(method) == 'function' then
           local super = function(instance, ...) return superclass[methodName](instance, ...) end --super function
@@ -74,9 +78,7 @@ Object.__classDict = {
   __tostring = function(instance) return ("instance of ".. instance.class.name) end
 }
 
-setmetatable(Object, {
-  __index = Object.__classDict,
-  __newindex = Object.__classDict,
+setmetatable(Object, { __index = Object.__classDict, __newindex = Object.__classDict,
   __tostring = function() return ("class Object") end,
   __call = Object.new
 })
