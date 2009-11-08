@@ -13,7 +13,7 @@ Object = { name = "Object",
     assert(classes[class]~=nil, "Use class:new instead of class.new")
     --FIXME add events here
     local instance = setmetatable({ class = class }, class.__classDict) -- the class dictionary is the instance's metatable
-    instance:init(...)
+    instance:initialize(...)
     return instance
   end,
 
@@ -51,7 +51,7 @@ Object = { name = "Object",
       __call = theClass.new
     })
     -- instance methods go after the setmetatable, so we can use "super"
-    theClass.init = function(instance,...) super(instance) end
+    theClass.initialize = function(instance,...) super(instance) end
 
     classes[theClass]=theClass --registers the new class on the list of classes
 
@@ -73,8 +73,7 @@ Object = { name = "Object",
 classes[Object]=Object -- adds Object to the list of classes
 
 Object.__classDict = {
-  init = function(instance, ...) end,   -- end of the init() call chain
-  instanceOf = function(instance, class) return class:made(instance) end, --instanceOf definition (less secure than class:made)
+  initialize = function(instance, ...) end,   -- end of the initialize() call chain
   __tostring = function(instance) return ("instance of ".. instance.class.name) end
 }
 
