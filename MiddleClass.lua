@@ -85,7 +85,7 @@ setmetatable(Object, { __index = Object.__classDict, __newindex = Object.__class
 -- Returns true if class is a subclass of other, false otherwise
 function subclassOf(other, class)
   if class.superclass==nil then return false end --class is Object, or a non-class
-  return class.superclass == other or class.superclass:subclassOf(other)
+  return class.superclass == other or subclassOf(other, class.superclass)
 end
 
 -- Returns true if obj is an instance of class (or one of its subclasses) false otherwise
