@@ -11,7 +11,7 @@ Object = { name = "Object",
   -- creates a new instance
   new = function(class, ...)
     assert(classes[class]~=nil, "Use class:new instead of class.new")
-    --FIXME add events here
+
     local instance = setmetatable({ class = class }, class.__classDict) -- the class dictionary is the instance's metatable
     instance:initialize(...)
     return instance
@@ -38,6 +38,7 @@ Object = { name = "Object",
         if localMethod ~= nil then return localMethod end
         return superclass[methodName]
       end,
+      -- FIXME add support for __index method here
       __newindex = function(_, methodName, method) -- when adding new methods, include a "super" function
         if type(method) == 'function' then
           local super = function(instance, ...) return superclass[methodName](instance, ...) end --super function
@@ -68,7 +69,27 @@ Object = { name = "Object",
     end
     if type(module.included)=="function" then module:included(class) end
   end
+
 }
+
+do
+  local capitalize = function(s)
+    return string.gsub (s, "(%w)([%w]*)", function (first, rest) return string.upper(first) .. rest end, 1)
+  end
+
+  Object.getter = function(class, attributeName, defaultValue)
+    class['get' .. capitalize(attributeName)] = function(self) return self[attributeName] or defaultValue end
+  end
+  
+  Object.setter = function(class, attributeName)
+    class['set' .. capitalize(attributeName)] = function(self, value) self[attributeName] = value end
+  end
+  
+  Object.getterSetter = function(class, attributeName, defaultValue)
+    class:getter(attributeName, defaultValue)
+    class:setter(attributeName)
+  end
+end
 
 classes[Object]=Object -- adds Object to the list of classes
 
