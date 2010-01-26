@@ -74,42 +74,42 @@ function StatefulObject:addState(stateName, superState)
   return state
 end
 
-do --create an environment to keep the following variables local
-  local ignoredMethods = {states=1, initialize=1, gotoState=1, addState=1, subclass=1, includes=1, exitState=1, enterState=1}
-  local prevSubclass = StatefulObject.subclass
-  --[[ creates a stateful subclass
-    Subclasses inherit all the states of their superclases, in a special way:
-    If class A has a state called Sleeping and B = A.subClass('B'), then B.states.Sleeping is a subclass of A.states.Sleeping
-    returns the newly created stateful class
-  ]]
-  function StatefulObject:subclass(name)
-    --assert(subclassOf(StatefulObject, self), "Use class:subclass instead of class.subclass")
-    local theClass = prevSubclass(self, name) --for now, theClass is just a regular subclass
-    
-    --the states of the subclass are subclasses of the superclass' states
-    theClass.states = {}
-    for stateName,state in pairs(self.states) do 
-      theClass:addState(stateName, state)
-    end
 
-    --make sure that the currentState is used on the method lookup function before looking on the class dict
-    local classDict = theClass.__classDict
-    classDict.__index = function(instance, method)
-      --first look on the current state
-      local currentState = rawget(instance, 'currentState')
-      if( currentState~=nil and
-          currentState[method]~=nil and
-          ignoredMethods[method]==nil) then
-        return currentState[method]
-      else
-      --if not found, look on the class itself
-        return classDict[method]
-      end
-    end
-
-    return theClass
+local ignoredMethods = {states=1, initialize=1, gotoState=1, addState=1, subclass=1, includes=1, exitState=1, enterState=1}
+local prevSubclass = StatefulObject.subclass
+--[[ creates a stateful subclass
+  Subclasses inherit all the states of their superclases, in a special way:
+  If class A has a state called Sleeping and B = A.subClass('B'), then B.states.Sleeping is a subclass of A.states.Sleeping
+  returns the newly created stateful class
+]]
+function StatefulObject:subclass(name)
+  --assert(subclassOf(StatefulObject, self), "Use class:subclass instead of class.subclass")
+  local theClass = prevSubclass(self, name) --for now, theClass is just a regular subclass
+  
+  --the states of the subclass are subclasses of the superclass' states
+  theClass.states = {}
+  for stateName,state in pairs(self.states) do 
+    theClass:addState(stateName, state)
   end
-end -- end of the environment to keep ignoredMethods local
+
+  --make sure that the currentState is used on the method lookup function before looking on the class dict
+  local classDict = theClass.__classDict
+  classDict.__index = function(instance, method)
+    --first look on the current state
+    local currentState = rawget(instance, 'currentState')
+    if( currentState~=nil and
+        currentState[method]~=nil and
+        ignoredMethods[method]==nil) then
+      return currentState[method]
+    else
+    --if not found, look on the class itself
+      return classDict[method]
+    end
+  end
+
+  return theClass
+end
+
 
 --[[ Include override for stateful classes.
      This is exactly like MiddleClass' include function, except that it module has a property called "states"
