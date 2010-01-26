@@ -84,24 +84,18 @@ setmetatable(Object, { __index = Object.__classDict, __newindex = Object.__class
   __call = Object.new
 })
 
-do --internal capitalization stuff for getters and setters
-  local capitalize = function(s)
-    return string.gsub(s, "(%w)([%w]*)", function (first, rest) return string.upper(first) .. rest end, 1)
+function Object.getterFor(class, attr) return 'get' .. attr:gsub("^%l", string.upper) end
+function Object.setterFor(class, attr) return 'set' .. attr:gsub("^%l", string.upper) end
+function Object.getter(class, attributeName, defaultValue)
+  class[class:getterFor(attributeName)] = function(self) 
+    if(self[attributeName]~=nil) then return self[attributeName] end
+    return defaultValue
   end
-
-  Object.getterFor = function(class, attributeName) return 'get' .. capitalize(attributeName) end
-  Object.setterFor = function(class, attributeName) return 'set' .. capitalize(attributeName) end
 end
-
-Object.getter = function(class, attributeName, defaultValue)
-  class[class:getterFor(attributeName)] = function(self) return self[attributeName] or defaultValue end
-end
-
-Object.setter = function(class, attributeName)
+function Object.setter(class, attributeName)
   class[class:setterFor(attributeName)] = function(self, value) self[attributeName] = value end
 end
-
-Object.getterSetter = function(class, attributeName, defaultValue)
+function Object.getterSetter(class, attributeName, defaultValue)
   class:getter(attributeName, defaultValue)
   class:setter(attributeName)
 end
