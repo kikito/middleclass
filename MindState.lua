@@ -42,8 +42,11 @@ end
 function StatefulObject:gotoState(stateName)
   assert(self.states~=nil, "Attribute 'states' not detected. check that you called instance:gotoState and not instance.gotoState, and that you invoked super(self) in the constructor.")
 
-  local nextState = self.states[stateName]
-  assert(type(stateName)=='string' and nextState~=nil, "State '" .. stateName .. "' not found")
+  local nextState
+  if(stateName~=nil) then
+    nextState = self.states[stateName]
+    assert(nextState~=nil, "State '" .. stateName .. "' not found")
+  end
 
   local prevState = self.currentState
   if(prevState~=nil and type(prevState.exitState) == "function") then
