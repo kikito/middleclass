@@ -23,7 +23,7 @@ StatefulObject.states = {} -- the root state list
   your states have a custom superclass that needs parameters on their initialize() function.
 ]]
 function StatefulObject:initialize(initParameters)
-  super(self)
+  super.initialize(self)
   initParameters = initParameters or {} --initialize to empty table if nil
   self.states = {}
   for stateName,stateClass in pairs(self.class.states) do 
@@ -40,7 +40,7 @@ end
   This method invokes the exitState and enterState functions if they exist on the current state
 ]]
 function StatefulObject:gotoState(stateName)
-  assert(self.states~=nil, "Attribute 'states' not detected. check that you called instance:gotoState and not instance.gotoState, and that you invoked super(self) in the constructor.")
+  assert(self.states~=nil, "Attribute 'states' not detected. check that you called instance:gotoState and not instance.gotoState, and that you invoked super.initialize(self) in the constructor.")
 
   local nextState
   if(stateName~=nil) then

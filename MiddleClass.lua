@@ -41,10 +41,9 @@ Object = { name = "Object",
       -- FIXME add support for __index method here
       __newindex = function(_, methodName, method) -- when adding new methods, include a "super" function
         if type(method) == 'function' then
-          local super = function(instance, ...) return superclass[methodName](instance, ...) end --super function
-          local fenv = getfenv(method) -- the method's environment
-          local newenv = setmetatable( {super = super}, {__index=fenv, __newindex=fenv} ) -- the new method's env, with super
-          setfenv(method, newenv)
+          local fenv = getfenv(method)
+          local newenv = setmetatable( {super = superclass.__classDict},  {__index = fenv, __newindex = fenv} )
+          setfenv( method, newenv )
         end
         rawset(classDict, methodName, method)
       end,
@@ -52,7 +51,7 @@ Object = { name = "Object",
       __call = theClass.new
     })
     -- instance methods go after the setmetatable, so we can use "super"
-    theClass.initialize = function(instance,...) super(instance) end
+    theClass.initialize = function(instance,...) super.initialize(instance) end
 
     classes[theClass]=theClass --registers the new class on the list of classes
 
