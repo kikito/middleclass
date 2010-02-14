@@ -62,12 +62,12 @@ end
   -- Mixin extension function - simulates very basically ruby's include(module)
   -- module is a lua table of functions. The functions will be copied to the class
   -- if present in the module, the included() method will be called
-Object.includes = function(class, module)
+Object.includes = function(class, module, ... )
   assert(classes[class]~=nil, "Use class:includes instead of class.includes")
   for methodName,method in pairs(module) do
     if methodName ~="included" then class[methodName] = method end
   end
-  if type(module.included)=="function" then module:included(class) end
+  if type(module.included)=="function" then module:included(class, ... ) end
 end
 
 
