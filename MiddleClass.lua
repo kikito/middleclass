@@ -49,7 +49,7 @@ Object.subclass = function(superclass, name)
       rawset(classDict, methodName, method)
     end,
     __tostring = function() return ("class ".. name) end,
-    __call = Object.new
+    __call = function(_, ...) return theClass:new(...) end
   })
   -- instance methods go after the setmetatable, so we can use "super"
   theClass.initialize = function(instance,...) super.initialize(instance) end
