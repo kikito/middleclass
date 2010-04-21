@@ -8,7 +8,7 @@ Middleclass attemps to be a mid-sized library (100 lines of code, on a single fi
 
 h1. Documentation
 
-See the [http://love2d.org/wiki/MiddleClass LÖVE wiki page] for examples & documentation.
+See the "LÖVE wiki page":http://love2d.org/wiki/MiddleClass for examples & documentation.
 
 h1. Features
   * ~100 lines of code
