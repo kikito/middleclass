@@ -1,0 +1,32 @@
+Lua OOP classes usually end being:
+a) multi-file libraries, too difficult to understand
+b) very small libraries, not very powerful
+
+Middleclass attemps to be a mid-sized library (100 lines of code, on a single file), with clean, easy to understand code, and yet powerful enough to be used in most cases.
+
+==Documentation==
+
+See the [http://love2d.org/wiki/MiddleClass LÖVE wiki page] for examples & documentation.
+
+==Features==
+  * ~100 lines of code
+  * top-level Object class
+  * all methods are virtual
+  * instance.class returns the instance's class
+  * Class.name returns the class name (a string)
+  * Class.superclass returns its super class
+  * Class:subclass(name) creates a new subclass - Class will be its superclass
+  * class(name) creates a new class (Object will be the superclass)
+  * class(name, Superclass) creates a new class.
+  * instanceOf(class, instance) returns true or false
+  * subclassOf(Superclass, Class) returns true if Class is a subclass of SuperClass
+  * new() and init() methods
+  * super.method() facility, similar to java's
+  * support for Lua events (except for __index - that one is reserved for now)
+  * basic mixins support (copying methods)
+  * getter/setter construction facilities
+  * Stateful object construction via the [http://love2d.org/wiki/index.php?title=MindState Mindsate] module.
+
+Features left out:
+  * metaclasses
+  * classes are not Objects (instances are)
