@@ -1,14 +1,16 @@
+h1. MiddleClass
+
 Lua OOP classes usually end being:
-a) multi-file libraries, too difficult to understand
-b) very small libraries, not very powerful
+* multi-file libraries, too difficult to understand
+* very small libraries, not very powerful
 
 Middleclass attemps to be a mid-sized library (100 lines of code, on a single file), with clean, easy to understand code, and yet powerful enough to be used in most cases.
 
-==Documentation==
+h1. Documentation
 
 See the [http://love2d.org/wiki/MiddleClass LÖVE wiki page] for examples & documentation.
 
-==Features==
+h1. Features
   * ~100 lines of code
   * top-level Object class
   * all methods are virtual
