@@ -58,6 +58,8 @@ Object.subclass = function(theClass, name)
 
   _classes[theSubclass]=theSubclass --registers the new class on the list of _classes
 
+  theClass:subclassed(theSubclass) -- hook method. By default it does nothing
+
   return theSubclass
 end
 
@@ -72,10 +74,12 @@ Object.includes = function(theClass, module, ... )
   if type(module.included)=="function" then module:included(theClass, ... ) end
 end
 
--- root of initialize and __tostring methods
+-- built-in methods
 Object.__classDict = {
-  initialize = function(instance, ...) end,   -- end of the initialize() call chain
-  __tostring = function(instance) return ("instance of ".. instance.class.name) end
+  initialize = function(instance, ...) end, -- empty method
+  destroy = function(instance) end, -- empty method
+  __tostring = function(instance) return ("instance of ".. instance.class.name) end,
+  subclassed = function(theClass, other) end -- empty method
 }
 
 -- This allows doing tostring(obj) and Object() instead of Object:new()
@@ -83,23 +87,6 @@ setmetatable(Object, { __index = Object.__classDict, __newindex = Object.__class
   __tostring = function() return ("class Object") end,
   __call = Object.new
 })
-
--- Getter/Setter related methods
-function Object.getterFor(theClass, attr) return 'get' .. attr:gsub("^%l", string.upper) end
-function Object.setterFor(theClass, attr) return 'set' .. attr:gsub("^%l", string.upper) end
-function Object.getter(theClass, attributeName, defaultValue)
-  theClass[theClass:getterFor(attributeName)] = function(self) 
-    if(self[attributeName]~=nil) then return self[attributeName] end
-    return defaultValue
-  end
-end
-function Object.setter(theClass, attributeName)
-  theClass[theClass:setterFor(attributeName)] = function(self, value) self[attributeName] = value end
-end
-function Object.getterSetter(theClass, attributeName, defaultValue)
-  theClass:getter(attributeName, defaultValue)
-  theClass:setter(attributeName)
-end
 
 -- Returns true if aClass is a subclass of other, false otherwise
 function subclassOf(other, aClass)

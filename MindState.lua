@@ -39,10 +39,32 @@ local _ignoredMethods = {
   states=1, initialize=1,
   gotoState=1, pushState=1, popState=1, popAllStates=1, getCurrentState=1, isInState=1,
   enterState=1, exitState=1, pushedState=1, poppedState=1, pausedState=1, continuedState=1,
-  addState=1, subclass=1, includes=1
+  addState=1, subclass=1, includes=1, destroy=1
 }
 
 local _prevSubclass = StatefulObject.subclass -- previous way of creating subclasses (used to redefine subclass itself)
+
+
+-- The State class; is the father of all State objects
+local State = class('State', Object)
+
+function State.subclass(theClass, name, theStatefulClass)
+  local theSubClass = Object.subclass(theClass, name)
+  local superDict = (theClass==State and theClass.__classDict or theStatefulClass.superclass.__classDict)
+  theSubClass.subclass = State.subclass
+
+  local mt = getmetatable(theSubClass)
+  mt.__newindex = function(_, methodName, method)
+    if type(method) == 'function' then
+      local fenv = getfenv(method)
+      local newenv = setmetatable( {super = superDict},  {__index = fenv, __newindex = fenv} )
+      setfenv( method, newenv )
+    end
+    rawset(theSubClass.__classDict, methodName, method)
+  end
+
+  return theSubClass
+end
 
 ------------------------------------
 -- INSTANCE METHODS
@@ -203,15 +225,17 @@ end
 ------------------------------------
 
 --[[ Adds a new state to the "states" class member.
-  superState is optional. If nil, Object will be the parent class of the new state
+  superState is optional. If nil, State will be the parent class of the new state
   returns the newly created state
 ]]
 function StatefulObject.addState(theClass, stateName, superState)
+  superState = superState or State
+  --print(theClass.name, stateName, superState.name)
   assert(subclassOf(StatefulObject, theClass), "Use class:addState instead of class.addState")
   assert(theClass.states[stateName]==nil, "The class " .. theClass.name .. " already has a state called '" .. stateName)
   assert(type(stateName)=="string", "stateName must be a string")
   -- states are just regular classes. If superState is nil, this uses Object as superClass
-  local state = class(stateName, superState)
+  local state = superState:subclass(stateName, theClass)
   theClass.states[stateName] = state
   return state
 end
