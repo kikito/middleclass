@@ -1,3 +1,5 @@
+require('MiddleClass')
+
 context( 'subclassOf', function()
 
   context( 'Primitives', function()

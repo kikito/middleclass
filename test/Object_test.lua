@@ -1,4 +1,5 @@
--- Test base classes (classes that depend directly from Object)
+require('MiddleClass')
+
 context( 'Object', function()
 
   context( 'When creating a subclass of Object', function()

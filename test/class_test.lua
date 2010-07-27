@@ -1,3 +1,5 @@
+require('MiddleClass')
+
 context( 'class', function()
 
   context( 'When creating a class', function()
