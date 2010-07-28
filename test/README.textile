@@ -1,0 +1,44 @@
+h1. MiddleClass tests
+
+These tests have been implemented using "telescope":http://github.com/norman/telescope
+
+
+h2. Installation dependencies for the tests
+
+First step is installing telescope. The easiest way in ubuntu is doing:
+
+<pre>
+sudo apt-get install lua luarocks
+sudo luarocks build telescope --from=http://luarocks.luaforge.net/rocks-cvs/
+</pre>
+
+The first command might ask about installing some dependencies; answer (y)es to that.
+
+In addition to this, you will need rake.
+<pre>
+sudo apt-get install rake
+</pre>
+
+Again, install any dependencies.
+
+h2. Test execution
+
+Open a console and change to the middleclass top-directory:
+
+<pre>
+cd middleclass
+</pre>
+
+Then execute @rake@. It should be configured to start the testing automatically.
+<pre>
+rake
+</pre>
+
+If everything has been set up properly, you should see lost of testing being done, and, hopefully, passing.
+
+
+
+
+
+
+
