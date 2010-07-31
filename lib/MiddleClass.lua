@@ -19,6 +19,9 @@ Object.new = function(theClass, ...)
   return instance
 end
 
+local _metamethods = { '__add', '__sub', '__mul', '__div', '__mod', '__pow', '__unm', '__concat', 
+                       '__len', '__eq', '__lt', '__le', '__call', '__gc', '__tostring' }
+
 -- creates a subclass
 Object.subclass = function(theClass, name)
   assert(_classes[theClass]~=nil, "Use class:subclass instead of class.subclass")
@@ -30,23 +33,17 @@ Object.subclass = function(theClass, name)
   -- classDict is the instances' metatable. It "points to himself" so they start looking for methods there.
   classDict.__index = classDict
 
-  local mt = {__index = theClass.__classDict}
-
-  -- making metamethods "be looked up" as well as regular methods (lua prevents this by default)
-  for _,m in ipairs({
-    '__add', '__sub', '__mul', '__div', '__mod', '__pow', '__unm', '__concat', 
-    '__len', '__eq', '__lt', '__le', '__call', '__gc', '__tostring', '__newindex'
-  }) do
-    rawset(mt, m, function(...) return theClass.__classDict[m](...) end)
+  -- make metamethods and metamethods "looked up" through implementation and __index respectively
+  for _,m in ipairs(_metamethods) do
+    classDict[m]= function(...) return theClass.__classDict[m](...) end
   end
-  setmetatable(classDict, mt )
+  setmetatable(classDict, {__index = theClass.__classDict})
 
   -- control how the new methods are inserted on the subclass, and how they are looked up
   setmetatable(theSubclass, {
     __index = function(_,methodName)
-        local localMethod = classDict[methodName] -- this allows using classDic as a class method AND instance method dict
-        if localMethod ~= nil then return localMethod end
-        return theClass[methodName]
+        -- search first on the subclass's classdict, then on the superclass
+        return classDict[methodName]~= nil and classDict[methodName] or theClass[methodName]
       end,
     -- FIXME add support for __index method here
     __newindex = function(_, methodName, method) -- when adding new methods, include a "super" function

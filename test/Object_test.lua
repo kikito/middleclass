@@ -125,5 +125,99 @@ context( 'Object', function()
       assert_equal(A.foo, 'foo')
     end)
   end)
+  
+  context( 'A class method', function()
+    local A = class('A')
+    function A.foo(theClass) return 'foo' end
+
+    local B = class('B', A)
+
+    test('should be available after being initialized', function()
+      assert_equal(A:foo(), 'foo')
+    end)
+
+    test('should be available for subclasses', function()
+      assert_equal(B:foo(), 'foo')
+    end)
+    
+    test('should be overridable by subclasses, without affecting the superclasses', function()
+      function B.foo(theClass) return 'chunky bacon' end
+      assert_equal(B:foo(), 'chunky bacon')
+      assert_equal(A:foo(), 'foo')
+    end)
+  end)
+  
+  context( 'Metamethods', function()
+
+    context('Custom Metamethods', function()
+      -- I'll be using 'a' instead of 'self' on this examle since it is shorter
+      local Vector= class('Vector')
+      function Vector.initialize(a,x,y,z) a.x, a.y, a.z = x+0.0,y+0.0,z+0.0 end
+      function Vector.__tostring(a) return 'Vector[' .. a.x .. ',' .. a.y .. ',' .. a.z .. ']' end
+      function Vector.__eq(a,b)     return a.x==b.x and a.y==b.y and a.z==b.z end
+      function Vector.__lt(a,b)     return #a < #b end
+      function Vector.__le(a,b)     return #a <= #b end
+      function Vector.__add(a,b)    return Vector:new(a.x+b.x, a.y+b.y ,a.z+b.z) end
+      function Vector.__sub(a,b)    return Vector:new(a.x-b.x, a.y-b.y, a.z-b.z) end
+      function Vector.__div(a,s)    return Vector:new(a.x/s, a.y/s, a.z/s) end
+      function Vector.__unm(a)      return Vector:new(-a.x, -a.y, -a.z) end
+      function Vector.__concat(a,b) return a.x*b.x+a.y*b.y+a.z*b.z end
+      function Vector.__len(a)      return math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z) end
+      function Vector.__pow(a,b)
+        local x = a.y*b.z-a.z*b.y
+        local y = a.z*b.x-a.x*b.z
+        local z = a.x*b.y-a.y*b.x
+        print(x,y,z)
+      
+        return Vector:new(x,y,z)
+      end
+      function Vector.__mul(a,b)
+        if type(b)=="number" then return Vector:new(a.x*b, a.y*b, a.z*b) end
+        if type(a)=="number" then return Vector:new(a*b.x, a*b.y, a*b.z) end
+      end
+
+      local a = Vector:new(1,2,3)
+      local b = Vector:new(2,4,6)
+
+      for metamethod,values in pairs({
+        __add =    { a+b,  Vector(3,6,9) },
+        __sub =    { b-a,  Vector(1,2,3) },
+        __div =    { b/2,  Vector(1,2,3) },
+        __unm =    { -a,   Vector(-1,-2,-3) },
+        __pow =    { a^b,  Vector(-3, 6,-3) },
+        __concat = { a..b, 28 },
+        __len =    { #(a),   math.sqrt(14) },
+        __lt =     { a<b,  true },
+        __le =     { a<=b, true },
+        __mul =    { 4*a,  Vector(4,8,12) }
+      }) do
+        test(metamethod .. ' should work', function()
+          assert_equal(values[1], values[2])
+        end)
+      end
+    end)
+
+    context('Default Metamethods', function() 
+      local Peter = class('Peter')
+      local peter = Peter()
+      
+      context('A Class', function()
+        test('should have a tostring metamethod', function()
+          assert_equal(tostring(Peter), 'class Peter')
+        end)
+        test('should have a call metamethod', function()
+          assert_true(instanceOf(Peter, peter))
+        end)
+      end)
+
+      context('An instance', function()
+        test('should have a tostring metamethod, different from Object.__tostring', function()
+          assert_not_equal(Peter.__tostring, Object.__tostring)
+          assert_equal(tostring(peter), 'instance of Peter')
+        end)
+      end)
+    end)
+ 
+  end)
 
 end)
