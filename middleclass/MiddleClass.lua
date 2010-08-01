@@ -14,13 +14,13 @@ _classes[Object] = { modules={} } -- adds Object to the list of _classes
 Object.new = function(theClass, ...)
   assert(_classes[theClass]~=nil, "Use class:new instead of class.new")
 
-  local instance = setmetatable({ class = theClass }, theClass.__classDict) -- the class dictionary is the instance's metatable
+  local instance = setmetatable({ class = theClass }, theClass.__classDict)
   instance:initialize(...)
   return instance
 end
 
-local _metamethods = { '__add', '__sub', '__mul', '__div', '__mod', '__pow', '__unm', '__concat', 
-                       '__len', '__eq', '__lt', '__le', '__call', '__gc', '__tostring' }
+local _metamethods = { '__add', '__sub', '__mul', '__div', '__mod', '__pow', '__unm', 
+                       '__eq', '__lt', '__le', '__call', '__gc', '__tostring', '__concat' }
 
 -- creates a subclass
 Object.subclass = function(theClass, name)
@@ -33,9 +33,12 @@ Object.subclass = function(theClass, name)
   -- classDict is the instances' metatable. It "points to himself" so they start looking for methods there.
   classDict.__index = classDict
 
-  -- make metamethods and metamethods "looked up" through implementation and __index respectively
+  -- metamethods & methods are "looked up" through implementation and __index
   for _,m in ipairs(_metamethods) do
-    classDict[m]= function(...) return theClass.__classDict[m](...) end
+    classDict[m]= function(...)
+      assert( type(theClass.__classDict[m])=='function', "Class " .. theSubclass.name .. " does not implement the " .. m .. " metamethod")
+      return theClass.__classDict[m](...)
+    end
   end
   setmetatable(classDict, {__index = theClass.__classDict})
 
