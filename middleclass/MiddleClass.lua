@@ -112,10 +112,10 @@ function instanceOf(aClass, obj)
 end
 
 -- Returns true if the a module has already been included on a class (or a superclass of that class)
-function included(module, aClass)
+function includes(module, aClass)
   if _classes[aClass]==nil or _classes[aClass].modules==nil then return false end
   if _classes[aClass].modules[module] then return true end
-  return included(module, aClass.superclass)
+  return includes(module, aClass.superclass)
 end
 
 -- Creates a new class named 'name'. It uses baseClass as the parent (Object if none specified)
