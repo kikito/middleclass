@@ -34,12 +34,25 @@ local _getStack=function(self)
   return stack
 end
 
+-- If a name is given, return the instance's state with that name. Else, return the top of the stack or nil
+local _getState=function(self, stateName)
+  if(stateName == nil) then
+    local stack = _getStack(self)
+    if #stack == 0 then return nil end
+    return(stack[#stack])
+  else
+    local nextState = _private[self].states[stateName]
+    assert(nextState~=nil, "State '" .. stateName .. "' not found")
+    return nextState
+  end
+end
+
 -- These methods will not be overriden by the states.
 local _ignoredMethods = {
   states=1, initialize=1,
-  gotoState=1, pushState=1, popState=1, popAllStates=1, getCurrentState=1, isInState=1,
+  gotoState=1, pushState=1, popState=1, popAllStates=1, isInState=1,
   enterState=1, exitState=1, pushedState=1, poppedState=1, pausedState=1, continuedState=1,
-  addState=1, subclass=1, includes=1, destroy=1
+  addState=1, subclass=1, includes=1, destroy=1, getCurrentStateName=1
 }
 
 local _prevSubclass = StatefulObject.subclass -- previous way of creating subclasses (used to redefine subclass itself)
@@ -101,23 +114,19 @@ end
 function StatefulObject:gotoState(newStateName, keepStack)
   assert(_private[self].states~=nil, "Attribute 'states' not detected. check that you called instance:gotoState and not instance.gotoState, and that you invoked super.initialize(self) in the constructor.")
 
-  local prevState = self:getCurrentState()
+  local prevState = _getState(self)
 
   -- If we're trying to go to a state in which we already are, return (do nothing)
   if(prevState~=nil and prevState.name == newStateName) then return end
 
-  local nextState
-  if(newStateName~=nil) then
-    nextState = _private[self].states[newStateName]
-    assert(nextState~=nil, "State '" .. newStateName .. "' not found")
+  -- Either empty completely the stack, or just call the exitstate callback on current state
+  if keepStack  then 
+    _invokeCallback(self, prevState, 'exitState', newStateName )
+  else
+    self:popAllStates()
   end
 
-  -- Either empty completely the stack, or just call the exitstate callback on current state
-  if(keepStack~=true) then 
-    self:popAllStates()
-  else
-    _invokeCallback(self, prevState, 'exitState', newStateName )
-  end
+  local nextState = _getState(self, newStateName)
 
   -- replace the top of the stack with the new state
   local stack = _getStack(self)
@@ -125,7 +134,6 @@ function StatefulObject:gotoState(newStateName, keepStack)
 
   -- Invoke enterState on the new state. 2nd parameter is the name of the previous state, or nil
   _invokeCallback(self, nextState, 'enterState', prevState~=nil and prevState.name or nil)
-
 end
 
 --[[ Changes the current state, by pushing a new state on the stack.
@@ -138,17 +146,16 @@ function StatefulObject:pushState(newStateName)
   assert(type(newStateName)=='string', "newStateName must be a string.")
   assert(_private[self].states~=nil, "Attribute 'states' not detected. check that you called instance:pushState and not instance.pushState, and that you invoked super.initialize(self) in the constructor.")
 
-  local nextState = _private[self].states[newStateName]
-  assert(nextState~=nil, "State '" .. newStateName .. "' not found")
+  local nextState = _getState(self, newStateName)
 
-  -- If we attempt to push a state and the state is already on return (do nothing)
+  -- If we attempt to push a state and the state is already in the pile then return (do nothing)
   local stack = _getStack(self)
   for _,state in ipairs(stack) do 
     if(state.name == newStateName) then return end
   end
 
   -- Invoke pausedState on the previous state
-  _invokeCallback(self, self:getCurrentState(), 'pausedState')
+  _invokeCallback(self, _getState(self), 'pausedState')
 
   -- Do the push
   table.insert(stack, nextState)
@@ -169,16 +176,28 @@ function StatefulObject:popState(stateName)
   assert(_private[self].states~=nil, "Attribute 'states' not detected. check that you called instance:popState and not instance.popState, and that you invoked super.initialize(self) in the constructor.")
 
   -- Invoke exitstate & poppedState on the state being popped out
-  local prevState = self:getCurrentState()
+  local prevState = _getState(self)
   _invokeCallback(self, prevState, 'exitState')
   _invokeCallback(self, prevState, 'poppedState')
 
-  -- Do the pop
+  -- Do the pop. If a name was given, remove that state from the stack. Otherwise, remove the stack top
   local stack = _getStack(self)
-  table.remove(stack, #stack)
+  local position
+  if(type(stateName)=='string') then
+    for i,state in ipairs(stack) do 
+      if(state.name == stateName) then
+        position = i
+        break
+      end
+    end
+  else
+    position = #stack
+  end
+  
+  table.remove(stack, position)
 
   -- Invoke continuedState on the new state
-  local newState = self:getCurrentState()
+  local newState = _getState(self)
   _invokeCallback(self, newState, 'continuedState')
 
   return newState
@@ -190,15 +209,6 @@ end
 function StatefulObject:popAllStates()
   local state = self:popState()
   while(state~=nil) do state = self:popState() end
-end
-
---[[ Returns the current state (top of the stack only)
-  The current state's name can be obtained doing object:getCurrentState().name
-]]
-function StatefulObject:getCurrentState()
-  local stack = _getStack(self)
-  if #stack == 0 then return nil end
-  return(stack[#stack])
 end
 
 --[[
@@ -220,20 +230,29 @@ function StatefulObject:isInState(stateName, testStateStack)
   return false
 end
 
+-- Returns the name of the state on top of the stack or nil if no state
+function StatefulObject:getCurrentStateName()
+  local currState = _getState(self)
+  return currState ~= nil and currState.name or nil
+end
+
 ------------------------------------
 -- CLASS METHODS
 ------------------------------------
 
 --[[ Adds a new state to the "states" class member.
   superState is optional. If nil, State will be the parent class of the new state
-  returns the newly created state
+  returns the newly created state, or the existing one if it existed
 ]]
 function StatefulObject.addState(theClass, stateName, superState)
   superState = superState or State
   --print(theClass.name, stateName, superState.name)
   assert(subclassOf(StatefulObject, theClass), "Use class:addState instead of class.addState")
-  assert(theClass.states[stateName]==nil, "The class " .. theClass.name .. " already has a state called '" .. stateName)
   assert(type(stateName)=="string", "stateName must be a string")
+
+  local prevState = theClass.states[stateName]
+  if prevState~=nil then return prevState end
+
   -- states are just regular classes. If superState is nil, this uses Object as superClass
   local state = superState:subclass(stateName, theClass)
   theClass.states[stateName] = state
