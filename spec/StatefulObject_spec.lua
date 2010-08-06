@@ -16,11 +16,14 @@ context( 'StatefulObject', function()
   function GoblinIddle:getStatus() return 'me bored boss' end
   function GoblinIddle:exitState() self.exitedIddle = true end
   function GoblinIddle:pausedState() self.pausedIddle = true end
+  function GoblinIddle:poppedState() self.poppedIddle = true end
+  function GoblinIddle:continuedState() self.continuedIddle = true end
   
   local GoblinAttacking = Goblin:addState('Attacking')
   function GoblinAttacking:pushedState() self.pushedAttacking = true end
   function GoblinAttacking:enterState() self.enteredAttacking = true end
   function GoblinAttacking:shout() return 'gnaaa!' end
+  function GoblinAttacking:poppedState() self.poppedAttacking = true end
 
   context('An instance', function()
 
@@ -52,7 +55,7 @@ context( 'StatefulObject', function()
       end)
     end)
     
-    context('When pushing one state on the stack', function()
+    context('When pushing states', function()
       local andrew = Enemy:new()
       local ian = Goblin:new()
 
@@ -83,8 +86,73 @@ context( 'StatefulObject', function()
         assert_true(ian.pausedIddle)
       end)
     end)
-  end)
 
+    context('When popping states', function()
+      local renfield = Goblin:new()
+      
+      -- reset vlad and renfield before each test
+      before(function()
+        renfield = Goblin:new()
+      end)
+
+      test('it should be able to pop states by name, calling callbacks', function()
+        renfield:pushState('Iddle')
+        renfield:pushState('Attacking')
+
+        assert_not_error(function() renfield:popState('Iddle') end)
+        assert_equal(renfield:getStatus(), 'none')
+        assert_equal(renfield:shout(), 'gnaaa!')
+        assert_true(renfield.poppedIddle)
+        assert_true(renfield.exitedIddle)
+      end)
+
+      test('it should be able to pop the top state, with appropiate callbacks', function()
+        renfield:pushState('Iddle')
+        renfield:pushState('Attacking')
+
+        assert_not_error(function() renfield:popState() end)
+        assert_equal(renfield:getStatus(), 'me bored boss')
+        assert_error(function() renfield:shout() end)
+        assert_true(renfield.poppedAttacking)
+        assert_true(renfield.continuedIddle)
+      end)
+      
+      test('popping the same state several times should not throw errors, and call no callbacks', function()
+        renfield:pushState('Iddle')
+        renfield:popState('Iddle')
+        renfield.poppedIddle = nil
+        assert_not_error(function() renfield:popState('Iddle') end)
+        assert_nil(renfield.poppedIddle)
+      end)
+      
+      test('popping inexistant states should not throw errors', function()
+        assert_not_error(function() renfield:popState('Foo') end)
+      end)
+     
+      test('popAllStates should work correctly and invoke all required callbacks', function()
+        renfield:pushState('Iddle')
+        renfield:pushState('Attacking')
+      
+        assert_not_error(function() renfield:popAllStates() end)
+        assert_true(renfield.poppedAttacking)
+        assert_true(renfield.continuedIddle)
+        assert_true(renfield.poppedIddle)
+        assert_true(renfield.exitedIddle)
+      end)
+
+    end)
+    
+    context('When testing whether it is on one state', function()
+      local igor = Goblin:new()
+      
+      test('This is pending', function() end)
+    
+    end)
+    
+
+    
+    
+  end) -- context 'An Instance'
 
 end)
 

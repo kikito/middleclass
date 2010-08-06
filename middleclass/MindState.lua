@@ -171,21 +171,16 @@ end
    If a state name is given, it will attempt to remove it from the stack. If not found on the stack it will do nothing.
    If no state name is give, this pops the top state from the stack, if any. Otherwise it does nothing.
    Callbacks will be called when needed.
+   Returns the length of the state stack after the pop
 ]]
 function StatefulObject:popState(stateName)
   assert(_private[self].states~=nil, "Attribute 'states' not detected. check that you called instance:popState and not instance.popState, and that you invoked super.initialize(self) in the constructor.")
 
-  -- Invoke exitstate & poppedState on the state being popped out
-  local prevState = _getState(self)
-  _invokeCallback(self, prevState, 'exitState')
-  _invokeCallback(self, prevState, 'poppedState')
-
-  -- Do the pop. If a name was given, remove that state from the stack. Otherwise, remove the stack top
-  local stack = _getStack(self)
-  local position
-  if(type(stateName)=='string') then
+  -- Calculate the position of the state to be removed
+  local stack, position = _getStack(self), 0
+  if type(stateName) == 'string' then
     for i,state in ipairs(stack) do 
-      if(state.name == stateName) then
+      if state.name == stateName then
         position = i
         break
       end
@@ -193,22 +188,30 @@ function StatefulObject:popState(stateName)
   else
     position = #stack
   end
-  
-  table.remove(stack, position)
 
-  -- Invoke continuedState on the new state
-  local newState = _getState(self)
-  _invokeCallback(self, newState, 'continuedState')
+  local prevState, invokeContinued = stack[position], position == #stack
 
-  return newState
+  if prevState~=nil then
+    -- Invoke exitstate & poppedState on the state being popped out
+    _invokeCallback(self, prevState, 'exitState')
+    _invokeCallback(self, prevState, 'poppedState')
+
+    -- Remove the state from the stack
+    table.remove(stack, position)
+
+    -- If the state on the top of the stack has been popped, invoke continuedState on it
+    if invokeContinued then _invokeCallback(self, _getState(self), 'continuedState') end
+  end
+
+  return #stack
 end
 
 --[[ Empties the state stack
    This function will invoke all the popState, exitState callbacks on all the states as they pop out.
 ]]
 function StatefulObject:popAllStates()
-  local state = self:popState()
-  while(state~=nil) do state = self:popState() end
+  local sl = self:popState()
+  while(sl > 0) do sl = self:popState() end
 end
 
 --[[
