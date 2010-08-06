@@ -145,14 +145,47 @@ context( 'StatefulObject', function()
     context('When testing whether it is on one state', function()
       local igor = Goblin:new()
       
-      test('This is pending', function() end)
-    
+      test('it should return true if the state is on the top of the stack', function() 
+        igor:gotoState('Iddle')
+        assert_true(igor:isInState('Iddle'))
+      end)
+      
+      test('it should return true if the state is on the stack and "testStateStack" is true', function()
+        igor:pushState('Attacking')
+        assert_true(igor:isInState('Attacking'))
+        assert_true(igor:isInState('Iddle', true))
+      end)
+      
+      test('it should return false otherwise', function()
+        assert_false(igor:isInState(nil))
+        assert_false(igor:isInState('Foo', true))
+      end)
     end)
     
+    context('When getting the current state name', function()
+      local peppy = Goblin:new()
+      
+      test('it should return nil when on nil-state', function()
+        assert_nil(peppy:getCurrentStateName())
+      end)
+      
+      test('it should return the top-of-the-stack statename otherwise', function()
+        peppy:pushState('Iddle')
+        assert_equal(peppy:getCurrentStateName(), 'Iddle')
+        peppy:pushState('Attacking')
+        assert_equal(peppy:getCurrentStateName(), 'Attacking')
+      end)
+    end)
 
-    
-    
   end) -- context 'An Instance'
+  
+  context('A mixin on a stateful object', function()
+    -- pending
+  end)
+  
+  context('A State', function()
+    -- pending
+  end)
 
 end)
 

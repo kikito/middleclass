@@ -58,8 +58,12 @@ local _ignoredMethods = {
 local _prevSubclass = StatefulObject.subclass -- previous way of creating subclasses (used to redefine subclass itself)
 
 
+------------------------------------
+-- STATE CLASS
+------------------------------------
+
 -- The State class; is the father of all State objects
-local State = class('State', Object)
+State = class('State', Object)
 
 function State.subclass(theClass, name, theStatefulClass)
   local theSubClass = Object.subclass(theClass, name)
@@ -221,13 +225,13 @@ end
 function StatefulObject:isInState(stateName, testStateStack)
   local stack = _getStack(self)
 
-  if(testStateStack==true) then
+  if testStateStack == true then
     for _,state in ipairs(stack) do 
-      if(state.name == stateName) then return true end
+      if state.name == stateName then return true end
     end
   else --testStateStack==false
     local state = stack[#stack]
-    if(state~=nil and state.name == stateName) then return true end
+    if state~=nil and state.name == stateName then return true end
   end
 
   return false
@@ -282,12 +286,12 @@ function StatefulObject.subclass(theClass, name)
   local classDict = theSubClass.__classDict
   classDict.__index = function(instance, methodName)
     -- If the method isn't on the 'ignoredMethods' list, look through the stack to see if it is defined
-    if(_ignoredMethods[methodName]~=1) then
+    if _ignoredMethods[methodName] ~= 1 then
       local stack = _private[instance].stateStack
       local method
       for i = #stack,1,-1 do -- reversal loop
         method = stack[i][methodName]
-        if(method~=nil) then return method end
+        if method ~= nil then return method end
       end
     end
     --if ignored or not found, look on the class method
@@ -314,7 +318,7 @@ function StatefulObject.includes(theClass, module, ...)
   if type(module.states)=="table" then
     for stateName,moduleState in pairs(module.states) do 
       local state = theClass.states[stateName]
-      if(state==nil) then state = theClass:addState(stateName) end
+      if state == nil then state = theClass:addState(stateName) end
       state:includes(moduleState, ...)
     end
   end
