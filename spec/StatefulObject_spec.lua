@@ -3,29 +3,117 @@ require('MindState')
 
 context( 'StatefulObject', function()
 
-  local Enemy = class('Enemy', StatefulObject)
-  function Enemy:getStatus() return 'none' end
 
-  local EnemyIddle = Enemy:addState('Iddle')
-  function EnemyIddle:enterState() self.enteredIddle = true end
-  function EnemyIddle:getStatus() return 'iddling' end
+  context('A State', function()
 
+    test('it should require 3 parameters when subclassed', function()
+      assert_error(function() State:subclass() end)
+      assert_error(function() State:subclass('meh') end)
+    end)
+      
+    test('Super calls should work correctly', function()
+      local SuperClass = class('SuperClass', StatefulObject)
+      function SuperClass:foo() return 'foo' end
+      
+      local RootClass = class('RootClass', SuperClass)
 
-  local Goblin = class('Goblin', Enemy)
-  local GoblinIddle = Goblin:addState('Iddle')
-  function GoblinIddle:getStatus() return 'me bored boss' end
-  function GoblinIddle:exitState() self.exitedIddle = true end
-  function GoblinIddle:pausedState() self.pausedIddle = true end
-  function GoblinIddle:poppedState() self.poppedIddle = true end
-  function GoblinIddle:continuedState() self.continuedIddle = true end
-  
-  local GoblinAttacking = Goblin:addState('Attacking')
-  function GoblinAttacking:pushedState() self.pushedAttacking = true end
-  function GoblinAttacking:enterState() self.enteredAttacking = true end
-  function GoblinAttacking:shout() return 'gnaaa!' end
-  function GoblinAttacking:poppedState() self.poppedAttacking = true end
+      local State1 = RootClass:addState('State1')
+      function State1:foo() return(super.foo(self) .. 'state1') end
 
-  context('An instance', function()
+      local State2 = RootClass:addState('State2', State1)
+      function State2:foo() return(super.foo(self) .. 'state2') end
+
+      local obj = RootClass:new()
+      
+      obj:gotoState('State1')
+      assert_equal(obj:foo(), 'foostate1')
+      
+      obj:gotoState('State2')
+      assert_equal(obj:foo(), 'foostate1state2')
+    end)
+
+  end)
+
+  context('A stateful class', function()
+    local Warrior = class('Warrior', StatefulObject)
+    local WarriorIddle, WarriorWalking
+
+    context('When adding a new state', function()
+      
+      test('it should not throw errors', function()
+        assert_not_error(function() WarriorIddle = Warrior:addState('Iddle') end)
+        function WarriorIddle:speak() return 'iddle' end
+      end)
+      
+      test('it returns an existing state if it already exists', function()
+        assert_equal(Warrior:addState('Iddle'), WarriorIddle)
+        assert_equal(Warrior:addState('Iddle'), Warrior.states.Iddle)
+      end)
+      
+      test('it should work with superstates', function()
+        assert_not_error(function()
+          WarriorWalking = Warrior:addState('Walking', WarriorIddle)
+        end)
+        
+        function WarriorWalking:walk() return 'tap tap tap' end
+
+        local novita = Warrior:new()
+        novita:gotoState('Walking')
+        
+        assert_equal(novita:speak(), 'iddle') -- inherited from Warrioriddle
+        assert_equal(novita:walk(), 'tap tap tap')
+        assert_true(subclassOf(WarriorIddle, WarriorWalking))
+      end)
+    end)
+    
+    context('When subclassing', function()
+
+      local Vehicle = class('Vehicle', StatefulObject)
+      Vehicle:addState('Parked')
+      function Vehicle.states.Parked:getStatus() return 'stopped' end
+
+      local Tank = class('Tank', Vehicle)
+      
+      test('The subclass should inherit the superclass states', function()
+        
+        assert_true(subclassOf(Vehicle.states.Parked, Tank.states.Parked))
+
+        panzer = Tank:new()
+        panzer:gotoState('Parked')
+        
+        assert_equal(panzer:getStatus(), 'stopped')
+      end)
+    end)
+    
+    context('When instantiating', function()
+      -- pending
+    end)
+
+  end)
+
+  context('A stateful instance', function()
+
+    local Enemy = class('Enemy', StatefulObject)
+    function Enemy:getStatus() return 'none' end
+
+    local EnemyIddle = Enemy:addState('Iddle')
+    function EnemyIddle:enterState() self.enteredIddle = true end
+    function EnemyIddle:getStatus() return 'iddling' end
+
+    local Goblin = class('Goblin', Enemy)
+
+    local GoblinIddle = Goblin:addState('Iddle')
+    function GoblinIddle:getStatus() return 'me bored boss' end
+    function GoblinIddle:exitState() self.exitedIddle = true end
+    function GoblinIddle:pausedState() self.pausedIddle = true end
+    function GoblinIddle:poppedState() self.poppedIddle = true end
+    function GoblinIddle:continuedState() self.continuedIddle = true end
+    
+    local GoblinAttacking = Goblin:addState('Attacking')
+    function GoblinAttacking:pushedState() self.pushedAttacking = true end
+    function GoblinAttacking:enterState() self.enteredAttacking = true end
+    function GoblinAttacking:shout() return 'gnaaa!' end
+    function GoblinAttacking:poppedState() self.poppedAttacking = true end
 
     context('When it goes from one state to another', function()
       local albert = Enemy:new()
@@ -179,13 +267,10 @@ context( 'StatefulObject', function()
 
   end) -- context 'An Instance'
   
-  context('A mixin on a stateful object', function()
+  context('A mixin included on a stateful object', function()
     -- pending
   end)
-  
-  context('A State', function()
-    -- pending
-  end)
+
 
 end)
 

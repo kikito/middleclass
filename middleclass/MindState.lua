@@ -52,11 +52,8 @@ local _ignoredMethods = {
   states=1, initialize=1,
   gotoState=1, pushState=1, popState=1, popAllStates=1, isInState=1,
   enterState=1, exitState=1, pushedState=1, poppedState=1, pausedState=1, continuedState=1,
-  addState=1, subclass=1, includes=1, destroy=1, getCurrentStateName=1
+  addState=1, subclass=1, include=1, destroy=1, getCurrentStateName=1
 }
-
-local _prevSubclass = StatefulObject.subclass -- previous way of creating subclasses (used to redefine subclass itself)
-
 
 ------------------------------------
 -- STATE CLASS
@@ -65,11 +62,17 @@ local _prevSubclass = StatefulObject.subclass -- previous way of creating subcla
 -- The State class; is the father of all State objects
 State = class('State', Object)
 
-function State.subclass(theClass, name, theStatefulClass)
+-- subclass takes an extra parameter: theRootClass the class where the state is being added
+-- It is used for method lookup
+function State.subclass(theClass, name, theRootClass)
+  assert(type(name) == 'string', "Must provide a name for the new state")
+  assert(subclassOf(StatefulObject, theRootClass), "Must provide a stateful object subclass")
+
   local theSubClass = Object.subclass(theClass, name)
-  local superDict = (theClass==State and theClass.__classDict or theStatefulClass.superclass.__classDict)
+  local superDict = (theClass==State and theRootClass.superclass.__classDict or theClass.__classDict )
   theSubClass.subclass = State.subclass
 
+  -- Modify super so it points to either the SuperState or RootClass if we are subclassing State
   local mt = getmetatable(theSubClass)
   mt.__newindex = function(_, methodName, method)
     if type(method) == 'function' then
@@ -253,11 +256,11 @@ end
 ]]
 function StatefulObject.addState(theClass, stateName, superState)
   superState = superState or State
-  --print(theClass.name, stateName, superState.name)
+
   assert(subclassOf(StatefulObject, theClass), "Use class:addState instead of class.addState")
   assert(type(stateName)=="string", "stateName must be a string")
 
-  local prevState = theClass.states[stateName]
+  local prevState = rawget(theClass.states, stateName)
   if prevState~=nil then return prevState end
 
   -- states are just regular classes. If superState is nil, this uses Object as superClass
@@ -274,11 +277,11 @@ end
 function StatefulObject.subclass(theClass, name)
   assert(theClass==StatefulObject or subclassOf(StatefulObject, theClass), "Use class:subclass instead of class.subclass")
 
-  local theSubClass = _prevSubclass(theClass, name) --for now, theClass is just a regular subclass
+  local theSubClass = Object.subclass(theClass, name) --for now, theClass is just a regular subclass
 
   --the states of the subclass are subclasses of the superclass' states
   theSubClass.states = {}
-  for stateName,state in pairs(theClass.states) do 
+  for stateName,state in pairs(theClass.states) do
     theSubClass:addState(stateName, state)
   end
 
@@ -307,19 +310,19 @@ end
      then each member of that module.states is included on the StatefulObject class.
      If module.states has a state that doesn't exist on StatefulObject, a new state will be created.
 ]]
-function StatefulObject.includes(theClass, module, ...)
+function StatefulObject.include(theClass, module, ...)
   assert(subclassOf(StatefulObject, theClass), "Use class:includes instead of class.includes")
   for methodName,method in pairs(module) do
     if methodName ~="included" and methodName ~= "states" then
       theClass[methodName] = method
     end
   end
-  if type(module.included)=="function" then module.included(theClass, ...) end
+  if type(module.included)=="function" then module:included(theClass, ...) end
   if type(module.states)=="table" then
     for stateName,moduleState in pairs(module.states) do 
       local state = theClass.states[stateName]
       if state == nil then state = theClass:addState(stateName) end
-      state:includes(moduleState, ...)
+      state:include(moduleState, ...)
     end
   end
 end

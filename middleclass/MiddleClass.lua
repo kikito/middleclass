@@ -118,8 +118,8 @@ function includes(module, aClass)
   return includes(module, aClass.superclass)
 end
 
--- Creates a new class named 'name'. It uses baseClass as the parent (Object if none specified)
-function class(name, baseClass)
+-- Creates a new class named 'name'. Uses Object if no baseClass is specified. Additional parameters for compatibility
+function class(name, baseClass, ...)
   baseClass = baseClass or Object
-  return baseClass:subclass(name)
+  return baseClass:subclass(name, ...)
 end
