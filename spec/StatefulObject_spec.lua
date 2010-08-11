@@ -6,7 +6,7 @@ context( 'StatefulObject', function()
 
   context('A State', function()
 
-    test('it should require 3 parameters when subclassed', function()
+    test('should require 3 parameters when subclassed', function()
       assert_error(function() State:subclass() end)
       assert_error(function() State:subclass('meh') end)
     end)
@@ -40,17 +40,17 @@ context( 'StatefulObject', function()
 
     context('When adding a new state', function()
       
-      test('it should not throw errors', function()
+      test('should not throw errors', function()
         assert_not_error(function() WarriorIddle = Warrior:addState('Iddle') end)
         function WarriorIddle:speak() return 'iddle' end
       end)
       
-      test('it returns an existing state if it already exists', function()
+      test('should return the existing state if it already exists', function()
         assert_equal(Warrior:addState('Iddle'), WarriorIddle)
         assert_equal(Warrior:addState('Iddle'), Warrior.states.Iddle)
       end)
       
-      test('it should work with superstates', function()
+      test('should work with superstates', function()
         assert_not_error(function()
           WarriorWalking = Warrior:addState('Walking', WarriorIddle)
         end)
@@ -85,8 +85,51 @@ context( 'StatefulObject', function()
       end)
     end)
     
-    context('When instantiating', function()
-      -- pending
+    context('When including a mixin', function()
+      local Class1 = class('Class1', StatefulObject)
+
+      local State1 = Class1:addState('State1')
+      function State1:foo() return 'state1' end
+      
+      local Mixin = {
+        included = function(mixin, theClass) theClass.includesMixin = true end,
+        foo = function() return 'mixin' end,
+        states = {
+          State1 = {
+            bar = function() return 'bar' end
+          },
+          State2 = {
+            foo = function() return 'state2' end
+          }
+        }
+      }
+      
+      Class1:include(Mixin)
+      
+      local obj = Class1:new()
+      
+      test('should invoke the "included" method when included', function()
+        assert_true(Class1.includesMixin)
+      end)
+      
+      test('should have all its functions (except "included") copied to its target class', function()
+        assert_equal(Class1:foo(), 'mixin')
+        assert_equal(Class1.included, nil)
+      end)
+      
+      test('should have new states', function()
+        assert_true(subclassOf(State, Class1.states.State2))
+        obj:gotoState('State2')
+        assert_equal(obj:foo(), 'state2')
+      end)
+      
+      test('existing states should be modified', function()
+        assert_true(includes(Mixin.states.State1, Class1.states.State1))
+        obj:gotoState('State1')
+        assert_equal(obj:foo(), 'state1')
+        assert_equal(obj:bar(), 'bar')
+      end)
+
     end)
 
   end)
@@ -122,14 +165,14 @@ context( 'StatefulObject', function()
       local chester = Goblin:new()
       chester:gotoState('Iddle')
     
-      test('it should not throw an error for a valid state name', function()
+      test('should not throw an error for a valid state name', function()
         assert_not_error(function() chester:gotoState('Attacking') end)
         assert_equal(chester:shout(), 'gnaaa!')
       end)
-      test('it should throw an error for an invalid state name', function()
+      test('should throw an error for an invalid state name', function()
         assert_error(function() albert:gotoState('Sleeping') end)
       end)
-      test('it should be able to go to the nil-state', function()
+      test('should be able to go to the nil-state', function()
         assert_not_error(function() albert:gotoState(nil) end)
         assert_equal(albert:getStatus(), 'none')
       end)
@@ -147,11 +190,11 @@ context( 'StatefulObject', function()
       local andrew = Enemy:new()
       local ian = Goblin:new()
 
-      test('it should error if the statename is invalid', function()
+      test('should error if the statename is invalid', function()
         assert_error(function() andrew:pushState(nil) end)
         assert_error(function() andrew:pushState('Sleeping') end)
       end)
-      test('it should correctly push valid states, without errors', function()
+      test('should correctly push valid states, without errors', function()
         assert_not_error(function() ian:pushState('Iddle') end)
         assert_not_error(function() ian:pushState('Attacking') end)
         assert_equal(ian:shout(), 'gnaaa!')
@@ -183,7 +226,7 @@ context( 'StatefulObject', function()
         renfield = Goblin:new()
       end)
 
-      test('it should be able to pop states by name, calling callbacks', function()
+      test('should be able to pop states by name, calling callbacks', function()
         renfield:pushState('Iddle')
         renfield:pushState('Attacking')
 
@@ -194,7 +237,7 @@ context( 'StatefulObject', function()
         assert_true(renfield.exitedIddle)
       end)
 
-      test('it should be able to pop the top state, with appropiate callbacks', function()
+      test('should be able to pop the top state, with appropiate callbacks', function()
         renfield:pushState('Iddle')
         renfield:pushState('Attacking')
 
@@ -233,18 +276,18 @@ context( 'StatefulObject', function()
     context('When testing whether it is on one state', function()
       local igor = Goblin:new()
       
-      test('it should return true if the state is on the top of the stack', function() 
+      test('should return true if the state is on the top of the stack', function() 
         igor:gotoState('Iddle')
         assert_true(igor:isInState('Iddle'))
       end)
       
-      test('it should return true if the state is on the stack and "testStateStack" is true', function()
+      test('should return true if the state is on the stack and "testStateStack" is true', function()
         igor:pushState('Attacking')
         assert_true(igor:isInState('Attacking'))
         assert_true(igor:isInState('Iddle', true))
       end)
       
-      test('it should return false otherwise', function()
+      test('should return false otherwise', function()
         assert_false(igor:isInState(nil))
         assert_false(igor:isInState('Foo', true))
       end)
@@ -253,11 +296,11 @@ context( 'StatefulObject', function()
     context('When getting the current state name', function()
       local peppy = Goblin:new()
       
-      test('it should return nil when on nil-state', function()
+      test('should return nil when on nil-state', function()
         assert_nil(peppy:getCurrentStateName())
       end)
       
-      test('it should return the top-of-the-stack statename otherwise', function()
+      test('should return the top-of-the-stack statename otherwise', function()
         peppy:pushState('Iddle')
         assert_equal(peppy:getCurrentStateName(), 'Iddle')
         peppy:pushState('Attacking')
@@ -266,11 +309,6 @@ context( 'StatefulObject', function()
     end)
 
   end) -- context 'An Instance'
-  
-  context('A mixin included on a stateful object', function()
-    -- pending
-  end)
-
 
 end)
 

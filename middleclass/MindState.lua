@@ -62,6 +62,12 @@ local _ignoredMethods = {
 -- The State class; is the father of all State objects
 State = class('State', Object)
 
+-- Constructor. Just sets the name on the state instances
+function State:initialize()
+  Object.initialize(self)
+  self.name = self.class.name
+end
+
 -- subclass takes an extra parameter: theRootClass the class where the state is being added
 -- It is used for method lookup
 function State.subclass(theClass, name, theRootClass)
@@ -91,24 +97,18 @@ end
 ------------------------------------
 
 --[[ constructor
-  If your states need initialization, they can receive parameters via the initParameters parameter
-  initParameters is a table with parameters used for initializing the states. These are needed mostly if
-  your states have a custom superclass that needs parameters on their initialize() function.
+     creates the private states and the state stack.
 ]]
-function StatefulObject:initialize(initParameters)
+function StatefulObject:initialize()
   super.initialize(self)
-  initParameters = initParameters or {} --initialize to empty table if nil
 
-  _private[self] = {
-    states = {},
-    stateStack = {}
-  }
+  local states = {}
 
   for stateName,stateClass in pairs(self.class.states) do 
-    local state = stateClass:new(unpack(initParameters[stateName] or {}))
-    state.name = stateName
-    _private[self].states[stateName] = state
+    states[stateName] = stateClass:new()
   end
+
+  _private[self] = { states = states, stateStack = {} }
 end
 
 --[[ Changes the current state.
@@ -263,7 +263,7 @@ function StatefulObject.addState(theClass, stateName, superState)
   local prevState = rawget(theClass.states, stateName)
   if prevState~=nil then return prevState end
 
-  -- states are just regular classes. If superState is nil, this uses Object as superClass
+  -- states are just regular classes. If superState is nil, this uses State as superClass
   local state = superState:subclass(stateName, theClass)
   theClass.states[stateName] = state
   return state
