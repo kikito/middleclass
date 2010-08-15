@@ -17,6 +17,8 @@
 
 ]]
 
+assert(Object~=nil and class~=nil, 'MiddleClass not detected. Please require it before using GetterSetter')
+
 GetterSetter = {}
 
 function GetterSetter.getterFor(theClass, attr) return 'get' .. attr:gsub("^%l", string.upper) end
