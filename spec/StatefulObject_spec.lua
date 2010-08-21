@@ -216,6 +216,7 @@ context( 'StatefulObject', function()
         assert_nil(andrew.pausedIddle)
         assert_true(ian.pausedIddle)
       end)
+      
     end)
 
     context('When popping states', function()

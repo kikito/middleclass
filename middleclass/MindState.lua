@@ -29,7 +29,7 @@ local _invokeCallback = function(self, state, callbackName, ... )
 end
 
 local _getStack=function(self)
-  local stack = _private[self].stateStack
+  local stack = _private[self].stack
   assert(stack~=nil, "Could not find the stack for the object. Make sure you invoked super.initialize(self) on the constructor.")
   return stack
 end
@@ -41,7 +41,7 @@ local _getState=function(self, stateName)
     if #stack == 0 then return nil end
     return(stack[#stack])
   else
-    local nextState = _private[self].states[stateName]
+    local nextState = self.class.states[stateName]
     assert(nextState~=nil, "State '" .. stateName .. "' not found")
     return nextState
   end
@@ -49,10 +49,9 @@ end
 
 -- These methods will not be overriden by the states.
 local _ignoredMethods = {
-  states=1, initialize=1,
-  gotoState=1, pushState=1, popState=1, popAllStates=1, isInState=1,
+  addState=1, subclass=1, include=1, initialize=1, destroy=1,
+  gotoState=1, pushState=1, popState=1, popAllStates=1, isInState=1, getCurrentStateName=1,
   enterState=1, exitState=1, pushedState=1, poppedState=1, pausedState=1, continuedState=1,
-  addState=1, subclass=1, include=1, destroy=1, getCurrentStateName=1
 }
 
 ------------------------------------
@@ -61,12 +60,6 @@ local _ignoredMethods = {
 
 -- The State class; is the father of all State objects
 State = class('State', Object)
-
--- Constructor. Just sets the name on the state instances
-function State:initialize()
-  Object.initialize(self)
-  self.name = self.class.name
-end
 
 -- subclass takes an extra parameter: theRootClass the class where the state is being added
 -- It is used for method lookup
@@ -102,13 +95,7 @@ end
 function StatefulObject:initialize()
   super.initialize(self)
 
-  local states = {}
-
-  for stateName,stateClass in pairs(self.class.states) do 
-    states[stateName] = stateClass:new()
-  end
-
-  _private[self] = { states = states, stateStack = {} }
+  _private[self] = { stack = {} }
 end
 
 --[[ Changes the current state.
@@ -119,12 +106,15 @@ end
   Second parameter is optional. If true, the stack will be conserved. Otherwise, it will be popped.
 ]]
 function StatefulObject:gotoState(newStateName, keepStack)
-  assert(_private[self].states~=nil, "Attribute 'states' not detected. check that you called instance:gotoState and not instance.gotoState, and that you invoked super.initialize(self) in the constructor.")
-
-  local prevState = _getState(self)
+  assert(_private[self].stack~=nil, "Attribute 'stack' not detected. check that you called instance:gotoState and not instance.gotoState, and that you invoked super.initialize(self) in the constructor.")
 
   -- If we're trying to go to a state in which we already are, return (do nothing)
-  if(prevState~=nil and prevState.name == newStateName) then return end
+  local stack = _getStack(self)
+  for _,state in ipairs(stack) do 
+    if(state.name == newStateName) then return end
+  end
+
+  local prevState = _getState(self)
 
   -- Either empty completely the stack, or just call the exitstate callback on current state
   if keepStack  then 
@@ -151,7 +141,7 @@ end
 ]]
 function StatefulObject:pushState(newStateName)
   assert(type(newStateName)=='string', "newStateName must be a string.")
-  assert(_private[self].states~=nil, "Attribute 'states' not detected. check that you called instance:pushState and not instance.pushState, and that you invoked super.initialize(self) in the constructor.")
+  assert(_private[self].stack~=nil, "Attribute 'stack' not detected. check that you called instance:pushState and not instance.pushState, and that you invoked super.initialize(self) in the constructor.")
 
   local nextState = _getState(self, newStateName)
 
@@ -181,7 +171,7 @@ end
    Returns the length of the state stack after the pop
 ]]
 function StatefulObject:popState(stateName)
-  assert(_private[self].states~=nil, "Attribute 'states' not detected. check that you called instance:popState and not instance.popState, and that you invoked super.initialize(self) in the constructor.")
+  assert(_private[self].stack~=nil, "Attribute 'stack' not detected. check that you called instance:popState and not instance.popState, and that you invoked super.initialize(self) in the constructor.")
 
   -- Calculate the position of the state to be removed
   local stack, position = _getStack(self), 0
@@ -225,14 +215,14 @@ end
   Returns true if the object is in the state named 'stateName'
   If second(optional) parameter is true, this method returns true if the state is on the stack instead
 ]]
-function StatefulObject:isInState(stateName, testStateStack)
+function StatefulObject:isInState(stateName, teststack)
   local stack = _getStack(self)
 
-  if testStateStack == true then
+  if teststack == true then
     for _,state in ipairs(stack) do 
       if state.name == stateName then return true end
     end
-  else --testStateStack==false
+  else --teststack==false
     local state = stack[#stack]
     if state~=nil and state.name == stateName then return true end
   end
@@ -290,7 +280,7 @@ function StatefulObject.subclass(theClass, name)
   classDict.__index = function(instance, methodName)
     -- If the method isn't on the 'ignoredMethods' list, look through the stack to see if it is defined
     if _ignoredMethods[methodName] ~= 1 then
-      local stack = _private[instance].stateStack
+      local stack = _private[instance].stack
       local method
       for i = #stack,1,-1 do -- reversal loop
         method = stack[i][methodName]
