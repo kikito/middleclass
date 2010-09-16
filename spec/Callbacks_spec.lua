@@ -19,7 +19,7 @@ context( 'Callbacks', function()
   
   local function addCallbacks(theClass)
     theClass:include(Callbacks)
-    theClass:defineCallbacks('bar', 'beforeBar', 'afterBar')
+    theClass:addCallbacksAround('bar')
     theClass:beforeBar('foo')
     theClass:afterBar( function(myself) myself:baz() end )
   end

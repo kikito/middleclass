@@ -9,7 +9,7 @@
   MyClass = class('MyClass')
   MyClass:include(Callbacks)
   
-  MyClass:defineCallbacks('foo', 'beforeFoo', 'afterFoo')
+  MyClass:addCallbacksAround('foo') -- this defines methods 'beforeFoo' and 'afterFoo'
   
   MyClass:beforeFoo('bar') -- can use either method names or functions
   MyClass:afterFoo(function() print('baz') end)
@@ -26,9 +26,10 @@
 --      PRIVATE STUFF
 --------------------------------
 
---[[ holds all the callbacks; callbacks are just lists of methods
+--[[ holds all the callbacks entries.
+     callback entries are just lists of methods to be called before / after some other method is called
 
-  _callbacks = {
+  _callbackEntries = {
     Actor = {
       beforeUpdate = { methods = {m1, m2, m3 } }, -- m1, m2, m3 & m4 can be method names or functions
       afterUpdate = { methods = { 'm4' } },
@@ -40,35 +41,38 @@
   }
 
 ]]
-local _callbacks = {} 
+local _callbackEntries = {}
+
+-- cache for not re-creating methods every time they are needed
+local _methodCache = {}
 
 -- private class methods
 
-local function _getCallback(theClass, callbackName)
-  if theClass==nil or callbackName==nil or _callbacks[theClass]==nil then return nil end
-  return _callbacks[theClass][callbackName]
+local function _getCallbackEntry(theClass, callbackName)
+  if theClass==nil or callbackName==nil or _callbackEntries[theClass]==nil then return nil end
+  return _callbackEntries[theClass][callbackName]
 end
 
 -- creates one of the "level 2" entries on callbacks, like beforeUpdate, afterupdate or update, above
-local function _getOrCreateCallback(theClass, callbackName)
+local function _getOrCreateCallbackEntry(theClass, callbackName)
   if not theClass or not callbackName then return {} end
-  _callbacks[theClass] = _callbacks[theClass] or {}
-  local classCallbacks = _callbacks[theClass]
-  classCallbacks[callbackName] = classCallbacks[callbackName] or {methods={}, before={}, after={}}
+  _callbackEntries[theClass] = _callbackEntries[theClass] or {}
+  local classEntries = _callbackEntries[theClass]
+  classEntries[callbackName] = classEntries[callbackName] or {methods={}, before={}, after={}}
   
   local existingMethod = rawget(theClass.__classDict, callbackName)
   if(type(existingMethod) == 'function') then
     
   end
 
-  return classCallbacks[callbackName]
+  return classEntries[callbackName]
 end
 
 -- returns all the methods that should be called when a callback is invoked, including superclasses
-local function _getCallbackChainMethods(theClass, callbackName)
+local function _getCallbackEntryChainMethods(theClass, callbackName)
   if theClass==nil then return {} end
-  local methods = _getOrCreateCallback(theClass, callbackName).methods
-  local superMethods = _getCallbackChainMethods(theClass.superclass, callbackName)
+  local methods = _getOrCreateCallbackEntry(theClass, callbackName).methods
+  local superMethods = _getCallbackEntryChainMethods(theClass.superclass, callbackName)
 
   local result = {}
   for i,method in ipairs(methods) do result[i]=method end
@@ -82,22 +86,18 @@ end
 -- Actor:afterUpdate('removeFromList', 'dance', function(actor) actor:doSomething() end)
 local function _defineCallbackMethod(theClass, callbackName)
   if callbackName == nil then return nil end
-  
-  print('defining callbackMethod' , theClass.name, callbackName)
 
   assert(theClass[callbackName]==nil, "Could not define " .. theClass.name .. '.'  .. callbackName .. ": already defined")
   
   theClass[callbackName] = function(theClass, ...)
     local methods = {...}
-    local existingMethods = _getOrCreateCallback(theClass, callbackName).methods
+    local existingMethods = _getOrCreateCallbackEntry(theClass, callbackName).methods
     for _,method in ipairs(methods) do
-      print('inserting', method, 'in', theClass.name, callbackName)
       table.insert(existingMethods, method)
     end
-    print(#existingMethods)
   end
 
-  _getOrCreateCallback(theClass, callbackName)
+  _getOrCreateCallbackEntry(theClass, callbackName)
 
   return theClass[callbackName]
 end
@@ -107,7 +107,7 @@ end
 -- given a callback name (e.g. beforeUpdate), obtain all the methods that must be called and execute them
 local function _runCallbackChain(object, callbackName)
   if callbackName==nil then return true end
-  local methods = _getCallbackChainMethods(object.class, callbackName)
+  local methods = _getCallbackEntryChainMethods(object.class, callbackName)
   for _,method in ipairs(methods) do
     if type(method)=='string' then
       local methodName = method
@@ -122,47 +122,43 @@ local function _runCallbackChain(object, callbackName)
   return true
 end
 
-local function _insertCallbacksDict(theClass)
-  local classDict = theClass.__classDict
-  local classDictMetatable = getmetatable(classDict)
-  local callbacksDict = {}
-  setmetatable(callbacksDict, { classDictMetatable.__index })
-  classDictMetatable.__index = callbacksDict
-  rawset(theClass, '__callbacksDict', callbacksDict)
-end
-
-local function _addToCallbacksDict(theClass, methodName, method)
-
-  if type(method) ~= 'function' then return method end
-
-  local callback = _getCallback(theClass, methodName)
-  if callback == nil then return method end
+-- given a class and a method, this returns a new version of that method that invokes callbacks
+-- uses a cache for not calculating the methods every time
+function _getChainedMethod(theClass, method, entry)
+  _methodCache[theClass] = _methodCache[theClass] or {}
+  local classCache = _methodCache[theClass]
   
-  local existingMethod = rawget(theClass.__callbacksDict, methodName)
-  if(type(existingMethod)=='function') then return existingMethod end
+  local chainedMethod = classCache[method]
+  
+  if(chainedMethod == nil) then
+    chainedMethod = function(self, ...)
+      for _,beforeCallbackName in ipairs(entry.before) do
+        if _runCallbackChain(self, beforeCallbackName) == false then return false end
+      end
 
-  -- newMethod surrounds regularMethod with before and after callbacks
-  -- notice that the execution is cancelled if any callback returns false
-  local newMethod = function(self, ...)
+      local result = method(self, ...)
 
-    for _,beforeCallbackName in ipairs(callback.before) do
-      if _runCallbackChain(self, beforeCallbackName) == false then return false end
+      for _,afterCallbackName in ipairs(entry.after) do
+        if _runCallbackChain(self, afterCallbackName) == false then return false end
+      end
+
+      return result
     end
-
-    local result = method(self, ...)
-
-    for _,afterCallbackName in ipairs(callback.after) do
-      if _runCallbackChain(self, afterCallbackName) == false then return false end
-    end
-
-    return result
+    classCache[method] = chainedMethod
   end
 
-  rawset(theClass.__classDict, methodName, nil)
-  rawset(theClass.__callbacksDict, methodName, newMethod)
+  return chainedMethod
+end
 
-  return newMethod
+function _addCallbacks(theClass, before_or_after, methodName, callbackMethodName)
+  assert(type(methodName)=='string', 'methodName must be a string')
+  callbackMethodName = callbackMethodName or before_or_after .. methodName:gsub("^%l", string.upper)
 
+  _defineCallbackMethod(theClass, callbackMethodName)
+
+  local entry = _getOrCreateCallbackEntry(theClass, methodName)
+
+  table.insert(entry[before_or_after], callbackMethodName)
 end
 
 --------------------------------
@@ -175,51 +171,43 @@ function Callbacks:included(theClass)
 
   if includes(Callbacks, theClass) then return end
 
-  -- 1. Subclassing must create a __callbacksDict attribute
-  rawset(theClass, '__callbacksDict', {})
-  local originalSubclass = theClass.subclass
-  theClass.subclass = function(theClass, name, ...)
-    local theSubClass = originalSubclass(theClass, name, ...)
-    _rawset(theSubClass, __callbacksDict, {})
-    return theSubClass
-  end
+  -- Modify the instance indexes so they add callbacks to existing functions
+    local mt = {
+    __index = function(instance, methodName)
+      local method = theClass.__classDict[methodName]
+      if type(method) ~= 'function' then return method end
+      
+      local entry = _getCallbackEntry(theClass, methodName)
+      if entry == nil then return method end
 
-  -- 2. Make inherited methods receive callbacks
-  local mt = getmetatable(theClass.__classDict)
-  local prevIndex = mt.__index
-  
-  mt.__index = function(t,methodName)
-    return _addToCallbacksDict(theClass, methodName, prevIndex[methodName])
-  end
+      return _getChainedMethod(theClass, method, entry)
+    end
+  }
+  setmetatable(mt, { __index = theClass.__classDict })
 
-  -- 3. New methods should handle callbacks
-  local mt = getmetatable(theClass)
-  local originalNewIndex = mt.__newindex
-
-  mt.__newindex = function(_, methodName, method)
-    rawset(theClass.__classDict, methodName, nil)
-    rawset(theClass.__callbacksDict, methodName, nil)
-    -- start by inserting a modified version of method with a "super" variable
-    originalNewIndex(_, methodName, method)
-    -- then, if callbacks exist for that method, give it special treatment
-    _addToCallbacksDict(theClass, methodName, theClass.__classDict[methodName])
+  theClass.new = function(theClass, ...)
+    local instance = setmetatable({ class = theClass }, mt)
+    instance:initialize(...)
+    return instance
   end
  
 end
 
--- usage: Actor:defineCallbacks('update', 'beforeUpdate', 'afterUpdate')
-function Callbacks.defineCallbacks(theClass, methodName, beforeName, afterName)
-  assert(type(methodName)=='string', 'methodName must be a string')
-  assert(type(beforeName)=='string' or type(afterName)=='string', 'at least one of beforeName or afterName must be a string')
+-- usage: Actor:addCallbacksBefore('update')
+-- callbackMethodName is optional, defaulting to 'beforeUpdate'
+function Callbacks.addCallbacksBefore(theClass, methodName, callbackMethodName)
+  _addCallbacks(theClass, 'before', methodName, callbackMethodName)
+end
 
-  _defineCallbackMethod(theClass, beforeName)
-  _defineCallbackMethod(theClass, afterName)
+-- usage: Actor:addCallbacksAfter('initialize')
+-- callbackMethodName is optional, defaulting to 'afterInitialize'
+function Callbacks.addCallbacksAfter(theClass, methodName, callbackMethodName)
+  _addCallbacks(theClass, 'after', methodName, callbackMethodName)
+end
 
-  local methodCallback = _getOrCreateCallback(theClass, methodName)
-
-  if(beforeName) then table.insert(methodCallback.before, beforeName) end
-  if(afterName) then table.insert(methodCallback.after, afterName) end
-  
-  _addToCallbacksDict(theClass, methodName)
-
+-- usage: Actor:addCallbackAround('update')
+-- before & afterCallbackMethodName are optional, defaulting to 'beforeUpdate' and 'afterUpdate'
+function Callbacks.addCallbacksAround(theClass, methodName, beforeCallbackMethodName, afterCallbackMethodName)
+  _addCallbacks(theClass, 'before', methodName, beforeCallbackMethodName)
+  _addCallbacks(theClass, 'after', methodName, afterCallbackMethodName)
 end
