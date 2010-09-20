@@ -5,6 +5,7 @@ context( 'Invoker', function()
   local MyClass = class('MyClass')
   MyClass:include(Invoker)
   function MyClass:foo(x,y) return 'foo ' .. tostring(x) .. ', ' .. tostring(y) end
+  function MyClass:testSelf() return instanceOf(MyClass, self) end
   
   local obj = MyClass:new()
   
@@ -21,6 +22,11 @@ context( 'Invoker', function()
       ),
       'bar 3, 4'
     )
+  end)
+  
+  test('It should use self as implicit parameter in all cases', function()
+    assert_true(obj:invoke('testSelf'))
+    assert_true(obj:invoke(MyClass.testSelf))
   end)
 
 end)
