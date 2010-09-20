@@ -34,17 +34,17 @@
       beforeUpdate = { methods = {m1, m2, m3 } }, -- m1, m2, m3 & m4 can be method names or functions
       afterUpdate = { methods = { 'm4' } },
       update = {
-        before = { 'beforeUpdate' },
-        after = { 'afterUpdate' }
+        before = 'beforeUpdate',
+        after = 'afterUpdate'
       }
     }
   }
 
 ]]
-local _callbackEntries = {}
+local _callbackEntries = setmetatable({}, {__mode = "k"}) -- weak table
 
 -- cache for not re-creating methods every time they are needed
-local _methodCache = {}
+local _methodCache = setmetatable({}, {__mode = "k"})
 
 -- private class methods
 
@@ -53,17 +53,12 @@ local function _getCallbackEntry(theClass, callbackName)
   return _callbackEntries[theClass][callbackName]
 end
 
--- creates one of the "level 2" entries on callbacks, like beforeUpdate, afterupdate or update, above
+-- creates one of the "level 2" entries on callbacks, like beforeUpdate or afterupdate, above
 local function _getOrCreateCallbackEntry(theClass, callbackName)
   if not theClass or not callbackName then return {} end
-  _callbackEntries[theClass] = _callbackEntries[theClass] or {}
+  _callbackEntries[theClass] = _callbackEntries[theClass] or setmetatable({}, {__mode = "k"})
   local classEntries = _callbackEntries[theClass]
-  classEntries[callbackName] = classEntries[callbackName] or {methods={}, before={}, after={}}
-  
-  local existingMethod = rawget(theClass.__classDict, callbackName)
-  if(type(existingMethod) == 'function') then
-    
-  end
+  classEntries[callbackName] = classEntries[callbackName] or setmetatable({ methods={} }, {__mode = "k"}) 
 
   return classEntries[callbackName]
 end
@@ -104,8 +99,10 @@ end
 
 -- private instance methods
 
--- given a callback name (e.g. beforeUpdate), obtain all the methods that must be called and execute them
-local function _runCallbackChain(object, callbackName)
+-- given a callback entry, obtain all the methods that must be called for that callback and execute them
+local function _runCallbackChain(object, entry, before_or_after)
+  if entry == nil then return true end
+  callbackName = entry[before_or_after]
   if callbackName==nil then return true end
   local methods = _getCallbackEntryChainMethods(object.class, callbackName)
   for _,method in ipairs(methods) do
@@ -124,41 +121,42 @@ end
 
 -- given a class and a method, this returns a new version of that method that invokes callbacks
 -- uses a cache for not calculating the methods every time
-function _getChainedMethod(theClass, method, entry)
-  _methodCache[theClass] = _methodCache[theClass] or {}
+function _getChainedMethod(theClass, methodName, method)
+  local entry = _getCallbackEntry(theClass, methodName)
+
+  if(entry==nil) then return method end
+
+  _methodCache[theClass] = _methodCache[theClass] or setmetatable({}, {__mode = "k"})
   local classCache = _methodCache[theClass]
   
-  local chainedMethod = classCache[method]
+  local chainedMethod = classCache[methodName]
   
-  if(chainedMethod == nil) then
+  if chainedMethod == nil then
     chainedMethod = function(self, ...)
-      for _,beforeCallbackName in ipairs(entry.before) do
-        if _runCallbackChain(self, beforeCallbackName) == false then return false end
-      end
-
+      if _runCallbackChain(self, entry, 'before') == false then return false end
       local result = method(self, ...)
-
-      for _,afterCallbackName in ipairs(entry.after) do
-        if _runCallbackChain(self, afterCallbackName) == false then return false end
-      end
-
+      if _runCallbackChain(self, entry, 'after') == false then return false end
       return result
     end
-    classCache[method] = chainedMethod
+    classCache[methodName] = chainedMethod
   end
 
   return chainedMethod
 end
 
+-- helper function used by addCallbacksBefore, after and around
 function _addCallbacks(theClass, before_or_after, methodName, callbackMethodName)
   assert(type(methodName)=='string', 'methodName must be a string')
+  assert(before_or_after == 'before' or before_or_after == 'after', 'Parameter must be "before" or "after"')
+
+  local entry = _getOrCreateCallbackEntry(theClass, methodName)
+
+  assert(entry[before_or_after] == nil, 'The "' .. tostring(before_or_after) .. '" callback is already defined as "' .. tostring(entry[before_or_after]) .. '". Use that callback method instead or adding a new one' )
   callbackMethodName = callbackMethodName or before_or_after .. methodName:gsub("^%l", string.upper)
 
   _defineCallbackMethod(theClass, callbackMethodName)
 
-  local entry = _getOrCreateCallbackEntry(theClass, methodName)
-
-  table.insert(entry[before_or_after], callbackMethodName)
+  entry[before_or_after]= callbackMethodName
 end
 
 --------------------------------
@@ -171,23 +169,34 @@ function Callbacks:included(theClass)
 
   if includes(Callbacks, theClass) then return end
 
-  -- Modify the instance indexes so they add callbacks to existing functions
-    local mt = {
-    __index = function(instance, methodName)
-      local method = theClass.__classDict[methodName]
-      if type(method) ~= 'function' then return method end
-      
-      local entry = _getCallbackEntry(theClass, methodName)
-      if entry == nil then return method end
+  -- Modify the instances __index metamethod so it adds callback chains to methods with callback entries
 
-      return _getChainedMethod(theClass, method, entry)
-    end
-  }
-  setmetatable(mt, { __index = theClass.__classDict })
-
+  local oldNew = theClass.new
+  
   theClass.new = function(theClass, ...)
-    local instance = setmetatable({ class = theClass }, mt)
-    instance:initialize(...)
+    local instance = oldNew(theClass, ...)
+
+    local prevIndex = getmetatable(instance).__index
+    local tIndex = type(prevIndex)
+
+    setmetatable(instance, {
+      __index = function(instance, methodName)
+        local method
+
+        if     tIndex == 'table'    then method = prevIndex[methodName]
+        elseif tIndex == 'function' then method = prevIndex(instance, methodName)
+        end
+
+        if type(method) ~= 'function' then return method end
+
+        return _getChainedMethod(theClass, methodName, method)
+      end
+    })
+
+    -- special treatment for afterInitialize callbacks
+    local entry = _getCallbackEntry(theClass, 'initialize')
+    if _runCallbackChain(instance, entry, 'after') == false then return false end
+
     return instance
   end
  

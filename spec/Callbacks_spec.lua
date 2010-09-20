@@ -66,7 +66,16 @@ context( 'Callbacks', function()
         testInstance(B)
       end)
     end)
+  end)
   
+  context('When creating an instance', function()
+    test('afterInitialize should be called', function()
+      defineRegularMethods(A)
+      A:include(Callbacks)
+      A:addCallbacksAfter('initialize')
+      A:afterInitialize('foo')
+      assert_equal(A:new().calls[1], 'foo')
+    end)
   end)
 
 
