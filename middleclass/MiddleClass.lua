@@ -48,7 +48,6 @@ Object.subclass = function(theClass, name)
         -- search first on the subclass's classdict, then on the superclass
         return classDict[methodName]~= nil and classDict[methodName] or theClass[methodName]
       end,
-    -- FIXME add support for __index method here
     __newindex = function(_, methodName, method) -- when adding new methods, include a "super" function
         if type(method) == 'function' then
           local fenv = getfenv(method)
