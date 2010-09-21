@@ -4,6 +4,9 @@
 -- Mixin that adds callbacks support (i.e. beforeXXX or afterYYY) to classes)
 -----------------------------------------------------------------------------------
 
+assert(Object~=nil and class~=nil, 'MiddleClass not detected. Please require it before using Callbacks')
+assert(Sender~=nil, 'The Callbacks module requires the Sender module in order to work. Please require Sender before requiring Callbacks')
+
 --[[ Usage:
 
   MyClass = class('MyClass')
@@ -106,15 +109,7 @@ local function _runCallbackChain(object, entry, before_or_after)
   if callbackName==nil then return true end
   local methods = _getCallbackEntryChainMethods(object.class, callbackName)
   for _,method in ipairs(methods) do
-    if type(method)=='string' then
-      local methodName = method
-      method = object[methodName]
-      assert(type(method) == 'function', methodName .. ' is not the name of an existing method of ' .. object.class.name)
-    end
-
-    assert(type(method) == 'function', "callbacks can only be functions or valid method names")
-
-    if method(object) == false then return false end
+    if Sender.send(object, method) == false then return false end
   end
   return true
 end

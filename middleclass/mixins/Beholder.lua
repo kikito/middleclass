@@ -4,6 +4,10 @@
 -- Small framework for event observers
 -----------------------------------------------------------------------------------
 
+assert(Object~=nil and class~=nil, 'MiddleClass not detected. Please require it before using Callbacks')
+assert(Sender~=nil, 'The Beholder module requires the Sender module in order to work. Please require Sender before requiring Beholder')
+
+
 --[[ Usage:
 
   require 'middleclass.mixins.Beholder' -- or 'middleclass.init'
@@ -31,8 +35,6 @@
 
 
 ]]
-
-assert(Object~=nil and class~=nil, 'MiddleClass not detected. Please require it before using Beholder')
 
 -- Private variable storing the list of event callbacks that can be used
 local _events = {}
@@ -85,15 +87,11 @@ function Beholder.trigger(eventId, ...)
   for object,eventsForObject in pairs(event) do
     for _,actions in pairs(eventsForObject) do
       for _,action in ipairs(actions) do
-        local method = action.method
-        if(type(method)=='string') then
-          method = object[method]
-        end
-        assert(type(method)=='function', 'Action must be a function or method name. Was ' .. tostring(method))
         local params = {}
         for k,v in ipairs(action.params) do params[k] = v end
         for _,v in ipairs({...}) do table.insert(params, v) end
-        method(object, unpack(params))
+        
+        Sender.send(object, action.method, unpack(params))
       end
     end
   end
