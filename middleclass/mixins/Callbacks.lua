@@ -51,9 +51,13 @@ local _methodCache = setmetatable({}, {__mode = "k"})
 
 -- private class methods
 
+local _getCallbackEntry
 local function _getCallbackEntry(theClass, callbackName)
-  if theClass==nil or callbackName==nil or _callbackEntries[theClass]==nil then return nil end
-  return _callbackEntries[theClass][callbackName]
+  if theClass == nil or callbackName == nil then return nil end
+  if  _callbackEntries[theClass] ~= nil and _callbackEntries[theClass][callbackName] ~= nil then
+    return _callbackEntries[theClass][callbackName]
+  end
+  return _getCallbackEntry(theClass.superclass, callbackName)
 end
 
 -- creates one of the "level 2" entries on callbacks, like beforeUpdate or afterupdate, above
@@ -85,7 +89,7 @@ end
 local function _defineCallbackMethod(theClass, callbackName)
   if callbackName == nil then return nil end
 
-  assert(theClass[callbackName]==nil, "Could not define " .. theClass.name .. '.'  .. callbackName .. ": already defined")
+  assert(rawget(theClass.__classDict,callbackName)==nil, "Could not define " .. theClass.name .. '.'  .. callbackName .. ": already defined")
   
   theClass[callbackName] = function(theClass, ...)
     local methods = {...}

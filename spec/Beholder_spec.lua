@@ -46,8 +46,6 @@ context( 'Beholder', function()
         Beholder.trigger('event3')
         assert_equal(obj.counter, 2)
       end)
-      
-      
 
     end)
     
