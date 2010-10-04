@@ -1,6 +1,2 @@
 require 'middleclass.MiddleClass'
 require 'middleclass.MindState'
-require 'middleclass.mixins.Sender'
-require 'middleclass.mixins.GetterSetter'
-require 'middleclass.mixins.Callbacks'
-require 'middleclass.mixins.Beholder'
