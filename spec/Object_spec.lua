@@ -203,7 +203,6 @@ context( 'Object', function()
         if type(b)=="number" then return Vector:new(a.x*b, a.y*b, a.z*b) end
         if type(a)=="number" then return Vector:new(a*b.x, a*b.y, a*b.z) end
       end
-      function Vector.length(a)      return math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z) end
 
       local a = Vector:new(1,2,3)
       local b = Vector:new(2,4,6)
