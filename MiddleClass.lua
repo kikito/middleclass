@@ -20,7 +20,7 @@ Object.new = function(theClass, ...)
 end
 
 local _metamethods = { '__add', '__sub', '__mul', '__div', '__mod', '__pow', '__unm', 
-                       '__eq', '__lt', '__le', '__call', '__gc', '__tostring', '__concat' }
+                       '__lt', '__le', '__call', '__gc', '__tostring', '__concat' }
 
 -- creates a subclass
 Object.subclass = function(theClass, name)
