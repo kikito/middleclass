@@ -1,7 +1,7 @@
 #!/usr/bin/env lua
 
 -- command should be specs/run.lua
-local command = debug.getinfo(1).short_src:gsub('\\', '/')
+local command = debug.getinfo(1).source:match("@(.*)$"):gsub('\\', '/')
 
 if command ~= 'specs/run.lua' then
   error('You must run the specs like this: specs/run.lua (or specs\\run.lua for windows)')
