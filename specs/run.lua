@@ -1,19 +1,16 @@
 #!/usr/bin/env lua
 
--- command is either specs/run.lua or ./run.lua, with anti-slashes transformed into slashes
+-- command should be specs/run.lua
 local command = debug.getinfo(1).short_src:gsub('\\', '/')
 
--- This works if command is ./run.lua
-local config = {
-  package_path = "package.path = '../?.lua'",
-  specs_dir= ""
-}
--- change config if the command is specs/run.lua
-if command == 'specs/run.lua' then
-  config = {
-    package_path = "package.path = './?.lua'",
-    specs_dir= "specs/"
-  }
+if command ~= 'specs/run.lua' then
+  error('You must run the specs like this: specs/run.lua (or specs\\run.lua for windows)')
 end
+
+-- This only works if command is spec/run.lua
+local config = {
+  package_path = "package.path = './?.lua'",
+  specs_dir= "specs/"
+}
 
 os.execute( ("tsc -f --before=%q %s*_spec.lua "):format( config.package_path, config.specs_dir ) )
