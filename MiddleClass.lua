@@ -6,9 +6,9 @@
 
 local _classes = setmetatable({}, {__mode = "k"})   -- weak table storing references to all declared _classes and their included modules
 
-Object = { name = "Object" } -- The 'Object' class
+Object = { name = "Object", __modules = {} } -- The 'Object' class
 
-_classes[Object] = { modules={} } -- adds Object to the list of _classes
+_classes[Object] = Object -- adds Object to the list of _classes
 
   -- creates a new instance
 Object.new = function(theClass, ...)
@@ -27,7 +27,7 @@ Object.subclass = function(theClass, name)
   assert(_classes[theClass]~=nil, "Use class:subclass instead of class.subclass")
   assert( type(name)=="string", "You must provide a name(string) for your class")
 
-  local theSubclass = { name = name, superclass = theClass, __classDict = {} }
+  local theSubclass = { name = name, superclass = theClass, __classDict = {}, __modules={} }
   local classDict = theSubclass.__classDict
 
   -- classDict is the instances' metatable. It "points to himself" so they start looking for methods there.
@@ -62,7 +62,7 @@ Object.subclass = function(theClass, name)
   -- instance methods go after the setmetatable, so we can use "super"
   theSubclass.initialize = function(instance,...) super.initialize(instance) end
 
-  _classes[theSubclass]={ modules={} } --registers the new class on the list of _classes
+  _classes[theSubclass]=theSubclass --registers the new class on the list of _classes
 
   theClass:subclassed(theSubclass) -- hook method. By default it does nothing
 
@@ -74,11 +74,12 @@ end
 -- if present in the module, the included() method will be called
 Object.include = function(theClass, module, ... )
   assert(_classes[theClass]~=nil, "Use class:includes instead of class.includes")
+  assert(type(module=='table'), "module must be a table")
   for methodName,method in pairs(module) do
     if methodName ~="included" then theClass[methodName] = method end
   end
   if type(module.included)=="function" then module:included(theClass, ... ) end
-  _classes[theClass].modules[module] = true
+  theClass.__modules[module] = module
   return theClass
 end
 
@@ -113,8 +114,8 @@ end
 
 -- Returns true if the a module has already been included on a class (or a superclass of that class)
 function includes(module, aClass)
-  if _classes[aClass]==nil or _classes[aClass].modules==nil then return false end
-  if _classes[aClass].modules[module] then return true end
+  if _classes[aClass]==nil then return false end
+  if aClass.__modules[module]==module then return true end
   return includes(module, aClass.superclass)
 end
 
