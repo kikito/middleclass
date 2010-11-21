@@ -42,14 +42,12 @@ Features left out:
   
 h1. Extras
 
-This library has a companion lib that adds a lot of interesting functionality to your objects. Give it a look at:
+This library has a companion lib that adds a lot of interesting functionality to your objects. Give it a look at "middleclass-extras":https://github.com/kikito/middleclass-extras
 
-You may find the specs for this package in https://github.com/kikito/middleclass-extras
-
-If you are looking for middeclass (now called Stateful), it's over there, too.
+If you are looking for @MindState@ (now called @Stateful@), it's over there, too.
 
 h1. Specs
 
-You may find the specs for this library at: https://github.com/kikito/middleclass-specs
+You may find the specs for this library in "middleclass-specs":https://github.com/kikito/middleclass-specs
 
 
