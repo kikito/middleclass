@@ -19,8 +19,8 @@ h1. Features
   * @Class.superclass@ returns its super class
   * Subclassing:
   ** @class(name)@ creates a subclass of @Object@
-  ** @class(name, Superclass)@ creates a subclass of the class @Class@
-  ** @Class:subclass(name)@ also creates a subclass of the class @Class@
+  ** @class(name, Superclass)@ creates a subclass of the class @SuperClass@
+  ** @SuperClass:subclass(name)@ also creates a subclass of the class @SuperClass@
   * Instantiation:
   ** Classes can define an @initialize@ method for initializing new instances. They can accept an arbitrary number of params.
   ** Instances are created by doing @Class:new(params)@ or also @Class(params)@
