@@ -4,7 +4,7 @@ Lua OOP classes usually end being:
 * multi-file libraries, too difficult to understand
 * very small libraries, not very powerful
 
-Middleclass attemps to be a mid-sized library (100 lines of code, on a single file), with clean, easy to understand code, and yet powerful enough to be used in most cases.
+Middleclass attemps to be a mid-sized library (~120 lines of code, on a single file), with clean, easy to understand code, and yet powerful enough to be used in most cases.
 
 h1. Documentation
 
@@ -15,20 +15,41 @@ h1. Features
   * top-level Object class
   * all methods are virtual
   * instance.class returns the instance's class
-  * Class.name returns the class name (a string)
-  * Class.superclass returns its super class
-  * Class:subclass(name) creates a new subclass - Class will be its superclass
-  * class(name) creates a new class (Object will be the superclass)
-  * class(name, Superclass) creates a new class.
-  * instanceOf(class, instance) returns true or false
-  * subclassOf(Superclass, Class) returns true if Class is a subclass of SuperClass
-  * new() and init() methods
-  * super.method() facility, similar to java's
-  * support for Lua events (except for __index - that one is reserved for now)
-  * basic mixins support (copying methods)
-  * getter/setter construction facilities
-  * Stateful object construction via the [http://love2d.org/wiki/index.php?title=MindState Mindsate] module.
+  * @Class.name@ returns the class name (a string)
+  * @Class.superclass@ returns its super class
+  * Subclassing:
+  ** @class(name)@ creates a subclass of @Object@
+  ** @class(name, Superclass)@ creates a subclass of the class @Class@
+  ** @Class:subclass(name)@ also creates a subclass of the class @Class@
+  * Instantiation:
+  ** Classes can define an @initialize@ method for initializing new instances. They can accept an arbitrary number of params.
+  ** Instances are created by doing @Class:new(params)@ or also @Class(params)@
+  ** It is recommended to use the @super@ facility inside all defined initializers: @super.initialize(self, params)@.
+  * support for Lua metamethods: just define a method called @__tostring@, @__add@, etc. and your instances will be able to use it.
+  * Mixins:
+  ** A very simple mechanism for sharing functionality among a group of classes that are otherwise non-related.
+  ** Mixins are just simple lua tables with functions inside them.
+  ** @Class:include(mixin)@ will copy the function definitions of @mixin@ to @class@
+  ** If @mixin@ contains a function, called @included@, that function will be invoked right after the functions have been copied. It allows for modifying the class more profoundly.
+  * The function @instanceOf(class, instance)@ returns @true@ if @instance@ is an instance of the class @Class@
+  * The function @subclassOf(Superclass, Class)@ returns @true@ if @Class@ is a subclass of @SuperClass@
+  * The function @includes(mixin, Class)@ returns @true@ if @Class@ (or one of its superclasses) includes @mixin@.
+  * The @super@ facility, can be used inside a method to call the same method as it's implemented by the superclass: @super.methodName(self, params)@
 
 Features left out:
   * metaclasses
   * classes are not Objects (instances are)
+  
+h1. Extras
+
+This library has a companion lib that adds a lot of interesting functionality to your objects. Give it a look at:
+
+You may find the specs for this package in https://github.com/kikito/middleclass-extras
+
+If you are looking for middeclass (now called Stateful), it's over there, too.
+
+h1. Specs
+
+You may find the specs for this library at: https://github.com/kikito/middleclass-specs
+
+
