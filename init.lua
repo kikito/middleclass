@@ -1,1 +1,1 @@
-require 'middleclass.middleclass'
+require ({...})[1]:gsub("%.init", "")..'.middleclass'
