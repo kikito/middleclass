@@ -1,1 +1,1 @@
-require 'middleclass.middleclass.lua'
+require 'middleclass.middleclass'
