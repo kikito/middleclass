@@ -1,0 +1,1 @@
+require 'middleclass.middleclass.lua'
