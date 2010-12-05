@@ -15,8 +15,8 @@ local _metamethods = { -- all metamethods except __index
 Object = { name = "Object", __modules = {} }
 
 Object.__classDict = {
-  initialize = _nilf, destroy = _nilf, subclassed = _nilf, __index2 = _nilf,
-  __tostring = function(instance) return ("instance of ".. instance.class.name) end -- root __tostring method
+  initialize = _nilf, destroy = _nilf, subclassed = _nilf,
+  __tostring = function(instance) return ("instance of ".. instance.class.name) end -- root of __tostring method
 }
 Object.__classDict.__index = Object.__classDict -- instances of Object need this
 
@@ -26,6 +26,8 @@ setmetatable(Object, {
   __call = Object.new,             -- allows instantiation via Object()
   __tostring = function() return "class Object" end -- allows tostring(obj)
 })
+
+_classes[Object] = Object -- register Object on the list of classes.
 
 -- creates a new instance
 Object.new = function(theClass, ...)
@@ -41,16 +43,15 @@ Object.subclass = function(theClass, name)
   assert(_classes[theClass]~=nil, "Use class:subclass instead of class.subclass")
   assert( type(name)=="string", "You must provide a name(string) for your class")
 
-  local theSubClass = { name = name, superclass = theClass, __classDict = { __index2=_nilf }, __modules={} }
+  local theSubClass = { name = name, superclass = theClass, __classDict = {}, __modules={} }
   
   local dict = theSubClass.__classDict   -- classDict contains all the [meta]methods of the class
   dict.__index = dict                    -- It "points to itself" so instances can use it as a metatable.
   local superDict = theClass.__classDict -- The superclass' classDict
 
-  -- when a method isn't found on classDict, 'escalate upwards'. If not found either, try with __index2
-  setmetatable(dict, { __index = function(self,x) return superDict[x] or dict.__index2(self, x) end })
+  setmetatable(dict, superDict) -- when a method isn't found on classDict, 'escalate upwards'.
 
-  for _,mmName in ipairs(_metamethods) do -- Creates the initial class metamethods
+  for _,mmName in ipairs(_metamethods) do -- Creates the initial metamethods
     dict[mmName]= function(...)           -- by default, they just 'look up' for an implememtation
       local method = superDict[mmName]    -- and if none found, they throw an error
       assert( type(method)=='function', tostring(theSubClass) .. " doesn't implement metamethod '" .. mmName .. "'" )
@@ -60,20 +61,19 @@ Object.subclass = function(theClass, name)
 
   setmetatable(theSubClass, {
     __index = dict,                              -- look for stuff on the dict
-    __newindex = function(_, methodName, method) -- add 'super' to methods, renaming __index to __index2
+    __newindex = function(_, methodName, method) -- add 'super' to methods
         if type(method) == 'function' then
           local fenv = getfenv(method)
           local newenv = setmetatable( {super = superDict},  {__index = fenv, __newindex = fenv} )
           setfenv( method, newenv )
         end
-        if methodName == '__index' then methodName = '__index2' end -- __index becomes __index2
         rawset(dict, methodName , method)
       end,
-    __tostring = function() return ("class ".. name) end,      -- allows doing tostring(MyClass)
-    __call = function(_, ...) return theSubClass:new(...) end  -- allows doing MyClass(...) instead of MyClass:new(...)
+    __tostring = function() return ("class ".. name) end,      -- allows tostring(MyClass)
+    __call = function(_, ...) return theSubClass:new(...) end  -- allows MyClass(...) instead of MyClass:new(...)
   })
 
-  theSubClass.initialize = function(instance,...) super.initialize(instance) end
+  theSubClass.initialize = function(instance,...) super.initialize(instance) end -- default initialize method
   _classes[theSubClass]= theSubClass -- registers the new class on the list of _classes
   theClass:subclassed(theSubClass)   -- hook method. By default it does nothing
 
@@ -92,8 +92,6 @@ Object.include = function(theClass, module, ... )
   theClass.__modules[module] = module
   return theClass
 end
-
-_classes[Object] = Object -- register Object on the list of classes.
 
 -- Returns true if aClass is a subclass of other, false otherwise
 function subclassOf(other, aClass)
