@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------------------------------------------------
--- middleclass.lua - v1.3a
+-- middleclass.lua - v1.3
 -- Enrique García ( enrique.garcia.cota [AT] gmail [DOT] com ) - 19 Oct 2009
 -- Based on YaciCode, from Julien Patte and LuaObject, from Sébastien Rocca-Serra
 -----------------------------------------------------------------------------------------------------------------------
@@ -62,6 +62,7 @@ Object.subclass = function(theClass, name)
   setmetatable(theSubClass, {
     __index = dict,                              -- look for stuff on the dict
     __newindex = function(_, methodName, method) -- add 'super' to methods
+        assert(methodName ~= '__index', "Can't modify __index. Include middleclass-extras.Indexable and use 'index' instead")
         if type(method) == 'function' then
           local fenv = getfenv(method)
           local newenv = setmetatable( {super = superDict},  {__index = fenv, __newindex = fenv} )
