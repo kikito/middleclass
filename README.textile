@@ -43,22 +43,19 @@ Features left out:
 h1. Installation using git (recommended)
 
 The easiest way is creating a clone using git:
-<pre>
-  git clone git://github.com/kikito/middleclass.git
-</pre>
+
+<pre>git clone git://github.com/kikito/middleclass.git</pre>
 
 This will create a folder called @middleclass@. You can require it using:
-<pre>
-  require 'middleclass.init'
-</pre>
+
+<pre>require 'middleclass.init'</pre>
 
 If you have @?/init.lua@ included in your @package.path@ variable, you can remove the @.init@ part.
 
 If you ever want to update middleclass, you can use the following commands:
-<pre>
-cd your/path/to/middleclass
-git pull origin master
-</pre>
+
+<pre>cd your/path/to/middleclass
+git pull origin master</pre>
 
 Git will automatically update middleclass for you.
 
@@ -72,9 +69,7 @@ As an alternative, you can directly download "middleclass.lua":https://github.co
 
 In that case, you will have to require it doing something like this (will vary if you put middleclass.lua inside a folder):
 
-<pre>
-  require 'middleclass'
-</pre>
+<pre>require 'middleclass'</pre>
 
 (This assumes you have @?.lua@ in your @package.path@, which is the default)
 
