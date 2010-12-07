@@ -54,14 +54,29 @@ This will create a folder called @middleclass@. You can require it using:
 
 If you have @?/init.lua@ included in your @package.path@ variable, you can remove the @.init@ part.
 
-h1. Manual download & install
+If you ever want to update middleclass, you can use the following commands:
+<pre>
+cd your/path/to/middleclass
+git pull origin master
+</pre>
+
+Git will automatically update middleclass for you.
+
+h1. Manual download
+
+Middleclass can be directly downloaded using "the github downloader":https://github.com/kikito/middleclass/archives/master
+
+You will not be able to get automatic updates with that method, but your folder size will be smaller.
 
 As an alternative, you can directly download "middleclass.lua":https://github.com/kikito/middleclass/raw/master/middleclass.lua and "BSD-LICENSE.txt":https://github.com/kikito/middleclass/raw/master/BSD-LICENSE.txt and put them in your project.
 
-Then you can require it like this:
+In that case, you will have to require it doing something like this (will vary if you put middleclass.lua inside a folder):
+
 <pre>
   require 'middleclass'
 </pre>
+
+(This assumes you have @?.lua@ in your @package.path@, which is the default)
 
 You will have to put BSD-LICENSE.txt somewhere in your folder, or copy-paste it inside of your own license.txt file.
   
