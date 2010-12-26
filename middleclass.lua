@@ -6,7 +6,7 @@
 
 local _nilf = function() end -- empty function
 
-local _classes = setmetatable({}, {__mode = "k"})   -- weak table storing references to all declared classes
+local _classes = setmetatable({}, {__mode = "kv"})   -- weak table storing references to all declared classes
 
 local _metamethods = { -- all metamethods except __index
   '__add', '__call', '__concat', '__div', '__le', '__lt', '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm' 
