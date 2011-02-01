@@ -24,7 +24,7 @@ h1. Features
   * Instantiation:
   ** Classes can define an @initialize@ method for initializing new instances. They can accept an arbitrary number of params.
   ** Instances are created by doing @Class:new(params)@ or also @Class(params)@
-  ** It is recommended to use the @super@ facility inside all defined initializers: @super.initialize(self, params)@.
+  ** SuperClass' methods can be used by using this syntax: @SuperClass.initialize(self, params)@.
   * support for Lua metamethods: just define a method called @__tostring@, @__add@, etc. and your instances will be able to use it.
   * Mixins:
   ** A very simple mechanism for sharing functionality among a group of classes that are otherwise non-related.
@@ -34,11 +34,11 @@ h1. Features
   * The function @instanceOf(class, instance)@ returns @true@ if @instance@ is an instance of the class @Class@
   * The function @subclassOf(Superclass, Class)@ returns @true@ if @Class@ is a subclass of @SuperClass@
   * The function @includes(mixin, Class)@ returns @true@ if @Class@ (or one of its superclasses) includes @mixin@.
-  * The @super@ facility, can be used inside a method to call the same method as it's implemented by the superclass: @super.methodName(self, params)@
 
 Features left out:
   * metaclasses
   * classes are not Objects (instances are)
+  * simulating a 'super' keyword (for performance concerns)
   
 h1. Installation using git (recommended)
 

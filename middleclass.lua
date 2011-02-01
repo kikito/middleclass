@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------------------------------------------------
--- middleclass.lua - v1.2
+-- middleclass.lua - v1.3
 -- Enrique García ( enrique.garcia.cota [AT] gmail [DOT] com ) - 19 Oct 2009
 -- Based on YaciCode, from Julien Patte and LuaObject, from Sébastien Rocca-Serra
 -----------------------------------------------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ Object.__classDict.__index = Object.__classDict -- instances of Object need this
 
 setmetatable(Object, { 
   __index = Object.__classDict,    -- look up methods in the classDict
-  __newindex = Object.__classDict, -- any new object methods will be defined in classDict
+  __newindex = Object.__classDict, -- any new Object methods will be defined in classDict
   __call = Object.new,             -- allows instantiation via Object()
   __tostring = function() return "class Object" end -- allows tostring(obj)
 })
@@ -30,8 +30,8 @@ setmetatable(Object, {
 _classes[Object] = Object -- register Object on the list of classes.
 
 -- creates a new instance
-Object.new = function(theClass, ...)
-  assert(_classes[theClass]~=nil, "Use class:new instead of class.new")
+function Object.new(theClass, ...)
+  assert(_classes[theClass]~=nil, "Use Class:new instead of Class.new")
 
   local instance = setmetatable({ class = theClass }, theClass.__classDict)
   instance:initialize(...)
@@ -39,8 +39,8 @@ Object.new = function(theClass, ...)
 end
 
 -- creates a subclass
-Object.subclass = function(theClass, name)
-  assert(_classes[theClass]~=nil, "Use class:subclass instead of class.subclass")
+function Object.subclass(theClass, name)
+  assert(_classes[theClass]~=nil, "Use Class:subclass instead of Class.subclass")
   assert( type(name)=="string", "You must provide a name(string) for your class")
 
   local theSubClass = { name = name, superclass = theClass, __classDict = {}, __modules={} }
@@ -61,20 +61,15 @@ Object.subclass = function(theClass, name)
 
   setmetatable(theSubClass, {
     __index = dict,                              -- look for stuff on the dict
-    __newindex = function(_, methodName, method) -- add 'super' to methods
+    __newindex = function(_, methodName, method) -- ensure that __index isn't modified by mistake
         assert(methodName ~= '__index', "Can't modify __index. Include middleclass-extras.Indexable and use 'index' instead")
-        if type(method) == 'function' then
-          local fenv = getfenv(method)
-          local newenv = setmetatable( {super = superDict},  {__index = fenv, __newindex = fenv} )
-          setfenv( method, newenv )
-        end
         rawset(dict, methodName , method)
       end,
     __tostring = function() return ("class ".. name) end,      -- allows tostring(MyClass)
     __call = function(_, ...) return theSubClass:new(...) end  -- allows MyClass(...) instead of MyClass:new(...)
   })
 
-  theSubClass.initialize = function(instance,...) super.initialize(instance) end -- default initialize method
+  theSubClass.initialize = function(instance,...) theClass.initialize(instance, ...) end -- default initialize method
   _classes[theSubClass]= theSubClass -- registers the new class on the list of _classes
   theClass:subclassed(theSubClass)   -- hook method. By default it does nothing
 
@@ -83,8 +78,8 @@ end
 
 -- Mixin extension function - simulates very basically ruby's include. Receives a table table, probably with functions.
 -- Its contents are copied to theClass, with one exception: the included() method will be called instead of copied
-Object.include = function(theClass, module, ... )
-  assert(_classes[theClass]~=nil, "Use class:includes instead of class.includes")
+function Object.include(theClass, module, ... )
+  assert(_classes[theClass]~=nil, "Use class:include instead of class.include")
   assert(type(module=='table'), "module must be a table")
   for methodName,method in pairs(module) do
     if methodName ~="included" then theClass[methodName] = method end
