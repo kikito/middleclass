@@ -37,7 +37,7 @@ end
 
 -- both creates and initializes an instance
 function Object.new(theClass, ...)
-  local instance = Object.allocate(theClass)
+  local instance = theClass:allocate()
   instance:initialize(...)
   return instance
 end
