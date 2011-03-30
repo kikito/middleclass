@@ -32,8 +32,7 @@ _classes[Object] = Object -- register Object on the list of classes.
 -- creates the instance based of the class, but doesn't initialize it
 function Object.allocate(theClass)
   assert(_classes[theClass]~=nil, "Use Class:allocate instead of Class.allocate")
-  local instance = setmetatable({ class = theClass }, theClass.__classDict)
-  return instance
+  return setmetatable({ class = theClass }, theClass.__classDict)
 end
 
 -- both creates and initializes an instance
