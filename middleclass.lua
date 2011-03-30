@@ -6,7 +6,7 @@
 
 local _nilf = function() end -- empty function
 
-local _classes = setmetatable({}, {__mode = "kv"})   -- weak table storing references to all declared classes
+local _classes = setmetatable({}, {__mode = "k"})   -- keeps track of all the tables that are classes
 
 local _metamethods = { -- all metamethods except __index
   '__add', '__call', '__concat', '__div', '__le', '__lt', '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm' 
@@ -27,11 +27,11 @@ setmetatable(Object, {
   __tostring = function() return "class Object" end -- allows tostring(obj)
 })
 
-_classes[Object] = Object -- register Object on the list of classes.
+_classes[Object] = true -- register Object on the list of classes.
 
 -- creates the instance based of the class, but doesn't initialize it
 function Object.allocate(theClass)
-  assert(_classes[theClass]~=nil, "Use Class:allocate instead of Class.allocate")
+  assert(_classes[theClass], "Use Class:allocate instead of Class.allocate")
   return setmetatable({ class = theClass }, theClass.__classDict)
 end
 
@@ -44,7 +44,7 @@ end
 
 -- creates a subclass
 function Object.subclass(theClass, name)
-  assert(_classes[theClass]~=nil, "Use Class:subclass instead of Class.subclass")
+  assert(_classes[theClass], "Use Class:subclass instead of Class.subclass")
   assert( type(name)=="string", "You must provide a name(string) for your class")
 
   local theSubClass = { name = name, superclass = theClass, __classDict = {}, __modules={} }
@@ -74,7 +74,7 @@ function Object.subclass(theClass, name)
   })
 
   theSubClass.initialize = function(instance,...) theClass.initialize(instance, ...) end -- default initialize method
-  _classes[theSubClass]= theSubClass -- registers the new class on the list of _classes
+  _classes[theSubClass]= true -- registers the new class on the list of _classes
   theClass:subclassed(theSubClass)   -- hook method. By default it does nothing
 
   return theSubClass
@@ -83,7 +83,7 @@ end
 -- Mixin extension function - simulates very basically ruby's include. Receives a table table, probably with functions.
 -- Its contents are copied to theClass, with one exception: the included() method will be called instead of copied
 function Object.include(theClass, module, ... )
-  assert(_classes[theClass]~=nil, "Use class:include instead of class.include")
+  assert(_classes[theClass], "Use class:include instead of class.include")
   assert(type(module=='table'), "module must be a table")
   for methodName,method in pairs(module) do
     if methodName ~="included" then theClass[methodName] = method end
@@ -95,21 +95,21 @@ end
 
 -- Returns true if aClass is a subclass of other, false otherwise
 function subclassOf(other, aClass)
-  if _classes[aClass]==nil or _classes[other]==nil then return false end
+  if not _classes[aClass] or not _classes[other] then return false end
   if aClass.superclass==nil then return false end -- aClass is Object, or a non-class
   return aClass.superclass == other or subclassOf(other, aClass.superclass)
 end
 
 -- Returns true if obj is an instance of aClass (or one of its subclasses) false otherwise
 function instanceOf(aClass, obj)
-  if _classes[aClass]==nil or type(obj)~='table' or _classes[obj.class]==nil then return false end
+  if not _classes[aClass] or type(obj)~='table' or not _classes[obj.class] then return false end
   if obj.class==aClass then return true end
   return subclassOf(aClass, obj.class)
 end
 
 -- Returns true if the a module has already been included on a class (or a superclass of that class)
 function includes(module, aClass)
-  if _classes[aClass]==nil then return false end
+  if not _classes[aClass] then return false end
   if aClass.__modules[module]==module then return true end
   return includes(module, aClass.superclass)
 end
