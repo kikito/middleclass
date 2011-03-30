@@ -29,11 +29,16 @@ setmetatable(Object, {
 
 _classes[Object] = Object -- register Object on the list of classes.
 
--- creates a new instance
-function Object.new(theClass, ...)
-  assert(_classes[theClass]~=nil, "Use Class:new instead of Class.new")
-
+-- creates the instance based of the class, but doesn't initialize it
+function Object.allocate(theClass)
+  assert(_classes[theClass]~=nil, "Use Class:allocate instead of Class.allocate")
   local instance = setmetatable({ class = theClass }, theClass.__classDict)
+  return instance
+end
+
+-- both creates and initializes an instance
+function Object.new(theClass, ...)
+  local instance = Object.allocate(theClass)
   instance:initialize(...)
   return instance
 end
