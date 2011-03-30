@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------------------------------------------------
--- middleclass.lua - v1.3
+-- middleclass.lua - v1.4
 -- Enrique García ( enrique.garcia.cota [AT] gmail [DOT] com ) - 19 Oct 2009
 -- Based on YaciCode, from Julien Patte and LuaObject, from Sébastien Rocca-Serra
 -----------------------------------------------------------------------------------------------------------------------
