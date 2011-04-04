@@ -1,6 +1,7 @@
 h1. MiddleClass
 
 Lua OOP classes usually end being:
+
 * multi-file libraries, too difficult to understand
 * very small libraries, not very powerful
 
@@ -8,10 +9,11 @@ Middleclass attemps to be a mid-sized library (~120 lines of code, on a single f
 
 h1. Documentation
 
-See the "githuby wiki page":https://github.com/kikito/middleclass/wiki for examples & documentation.
+See the "github wiki page":https://github.com/kikito/middleclass/wiki for examples & documentation.
 
 h1. Features
-  * ~100 lines of code
+
+  * ~120 lines of code
   * top-level Object class
   * all methods are virtual
   * instance.class returns the instance's class
@@ -36,6 +38,7 @@ h1. Features
   * The function @includes(mixin, Class)@ returns @true@ if @Class@ (or one of its superclasses) includes @mixin@.
 
 Features left out:
+
   * metaclasses
   * classes are not Objects (instances are)
   * simulating a 'super' keyword (for performance concerns)
@@ -84,5 +87,3 @@ If you are looking for @MindState@ (now called @Stateful@), it's over there, too
 h1. Specs
 
 You may find the specs for this library in "middleclass-specs":https://github.com/kikito/middleclass-specs
-
-
