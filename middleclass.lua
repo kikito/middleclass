@@ -84,7 +84,7 @@ end
 -- Its contents are copied to theClass, with one exception: the included() method will be called instead of copied
 function Object.include(theClass, module, ... )
   assert(_classes[theClass], "Use class:include instead of class.include")
-  assert(type(module=='table'), "module must be a table")
+  assert(type(module)=='table', "module must be a table")
   for methodName,method in pairs(module) do
     if methodName ~="included" then theClass[methodName] = method end
   end
