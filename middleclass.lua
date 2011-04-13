@@ -8,15 +8,14 @@ local _nilf = function() end -- empty function
 
 local _classes = setmetatable({}, {__mode = "k"})   -- keeps track of all the tables that are classes
 
-local _metamethods = { -- all metamethods except __index
-  '__add', '__call', '__concat', '__div', '__le', '__lt', '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm' 
-}
-
 Object = { name = "Object", __modules = {} }
 
 Object.__classDict = {
   initialize = _nilf, destroy = _nilf, subclassed = _nilf,
-  __tostring = function(instance) return ("instance of ".. instance.class.name) end -- root of __tostring method
+  __tostring = function(instance) return ("instance of ".. instance.class.name) end, -- root of __tostring method,
+  __metamethods = { '__add', '__call', '__concat', '__div', '__le', '__lt', 
+    '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm' 
+  }
 }
 Object.__classDict.__index = Object.__classDict -- instances of Object need this
 
@@ -55,14 +54,6 @@ function Object.subclass(theClass, name)
 
   setmetatable(dict, superDict) -- when a method isn't found on classDict, 'escalate upwards'.
 
-  for _,mmName in ipairs(_metamethods) do -- Creates the initial metamethods
-    dict[mmName]= function(...)           -- by default, they just 'look up' for an implememtation
-      local method = superDict[mmName]    -- and if none found, they throw an error
-      assert( type(method)=='function', tostring(theSubClass) .. " doesn't implement metamethod '" .. mmName .. "'" )
-      return method(...)
-    end
-  end
-
   setmetatable(theSubClass, {
     __index = dict,                              -- look for stuff on the dict
     __newindex = function(_, methodName, method) -- ensure that __index isn't modified by mistake
@@ -73,7 +64,15 @@ function Object.subclass(theClass, name)
     __call = function(_, ...) return theSubClass:new(...) end  -- allows MyClass(...) instead of MyClass:new(...)
   })
 
-  theSubClass.initialize = function(instance,...) theClass.initialize(instance, ...) end -- default initialize method
+  for _,mmName in ipairs(theClass.__metamethods) do -- Creates the initial metamethods
+    dict[mmName]= function(...)           -- by default, they just 'look up' for an implememtation
+      local method = superDict[mmName]    -- and if none found, they throw an error
+      assert( type(method)=='function', tostring(theSubClass) .. " doesn't implement metamethod '" .. mmName .. "'" )
+      return method(...)
+    end
+  end
+
+  theSubClass.initialize = function(instance,...) theClass.initialize(instance, ...) end
   _classes[theSubClass]= true -- registers the new class on the list of _classes
   theClass:subclassed(theSubClass)   -- hook method. By default it does nothing
 
