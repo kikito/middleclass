@@ -82,15 +82,18 @@ end
 
 -- Mixin extension function - simulates very basically ruby's include. Receives a table table, probably with functions.
 -- Its contents are copied to theClass, with one exception: the included() method will be called instead of copied
-function Object.include(theClass, module, ... )
-  assert(_classes[theClass], "Use class:include instead of class.include")
+function Object.include(t, module, ... )
+  assert(_classes[t] or t.class,
+         "You can only include modules into a class or an instance of a class. Also make sure you're using class:include instead of class.include.")
   assert(type(module=='table'), "module must be a table")
+  
   for methodName,method in pairs(module) do
-    if methodName ~="included" then theClass[methodName] = method end
+    if methodName ~="included" then t[methodName] = method end
   end
-  if type(module.included)=="function" then module:included(theClass, ... ) end
-  theClass.__modules[module] = module
-  return theClass
+  
+  if type(module.included)=="function" then module:included(t, ...) end
+  if _classes[t] then theClass.__modules[module] = module end
+  return t
 end
 
 -- Returns true if aClass is a subclass of other, false otherwise
