@@ -8,7 +8,7 @@ local _nilf = function() end -- empty function
 
 local _classes = setmetatable({}, {__mode = "k"})   -- keeps track of all the tables that are classes
 
-Object = { name = "Object", __modules = {} }
+Object = { name = "Object", __mixins = {} }
 
 Object.__classDict = {
   initialize = _nilf, destroy = _nilf, subclassed = _nilf,
@@ -46,7 +46,7 @@ function Object.subclass(theClass, name)
   assert(_classes[theClass], "Use Class:subclass instead of Class.subclass")
   assert( type(name)=="string", "You must provide a name(string) for your class")
 
-  local theSubClass = { name = name, superclass = theClass, __classDict = {}, __modules={} }
+  local theSubClass = { name = name, superclass = theClass, __classDict = {}, __mixins={} }
   
   local dict = theSubClass.__classDict   -- classDict contains all the [meta]methods of the class
   dict.__index = dict                    -- It "points to itself" so instances can use it as a metatable.
@@ -81,14 +81,14 @@ end
 
 -- Mixin extension function - simulates very basically ruby's include. Receives a table table, probably with functions.
 -- Its contents are copied to theClass, with one exception: the included() method will be called instead of copied
-function Object.include(theClass, module, ... )
+function Object.include(theClass, mixin, ... )
   assert(_classes[theClass], "Use class:include instead of class.include")
-  assert(type(module)=='table', "module must be a table")
-  for methodName,method in pairs(module) do
+  assert(type(mixin)=='table', "mixin must be a table")
+  for methodName,method in pairs(mixin) do
     if methodName ~="included" then theClass[methodName] = method end
   end
-  if type(module.included)=="function" then module:included(theClass, ... ) end
-  theClass.__modules[module] = module
+  if type(mixin.included)=="function" then mixin:included(theClass, ... ) end
+  theClass.__mixins[mixin] = mixin
   return theClass
 end
 
@@ -106,14 +106,14 @@ function instanceOf(aClass, obj)
   return subclassOf(aClass, obj.class)
 end
 
--- Returns true if the a module has already been included on a class (or a superclass of that class)
-function includes(module, aClass)
+-- Returns true if the mixin has already been included on a class (or a superclass)
+function includes(mixin, aClass)
   if not _classes[aClass] then return false end
-  if aClass.__modules[module]==module then return true end
-  return includes(module, aClass.superclass)
+  if aClass.__mixins[mixin]==mixin then return true end
+  return includes(mixin, aClass.superclass)
 end
 
--- Creates a new class named 'name'. Uses Object if no baseClass is specified. Additional parameters for compatibility
+-- Creates a new class named 'name'. Uses Object if no baseClass is specified.
 function class(name, baseClass, ...)
   baseClass = baseClass or Object
   return baseClass:subclass(name, ...)
