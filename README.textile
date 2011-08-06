@@ -1,0 +1,90 @@
+h1. MiddleClass
+
+Lua OOP classes usually end being:
+
+* multi-file libraries, too difficult to understand
+* very small libraries, not very powerful
+
+Middleclass attemps to be a mid-sized library (~120 lines of code, on a single file), with clean, easy to understand code, and yet powerful enough to be used in most cases.
+
+h1. Documentation
+
+See the "github wiki page":https://github.com/kikito/middleclass/wiki for examples & documentation.
+
+h1. Features
+
+  * ~120 lines of code
+  * top-level Object class
+  * all methods are virtual
+  * instance.class returns the instance's class
+  * @Class.name@ returns the class name (a string)
+  * @Class.superclass@ returns its super class
+  * Subclassing:
+  ** @class(name)@ creates a subclass of @Object@
+  ** @class(name, Superclass)@ creates a subclass of the class @SuperClass@
+  ** @SuperClass:subclass(name)@ also creates a subclass of the class @SuperClass@
+  * Instantiation:
+  ** Classes can define an @initialize@ method for initializing new instances. They can accept an arbitrary number of params.
+  ** Instances are created by doing @Class:new(params)@ or also @Class(params)@
+  ** SuperClass' methods can be used by using this syntax: @SuperClass.initialize(self, params)@.
+  * support for Lua metamethods: just define a method called @__tostring@, @__add@, etc. and your instances will be able to use it.
+  * Mixins:
+  ** A very simple mechanism for sharing functionality among a group of classes that are otherwise non-related.
+  ** Mixins are just simple lua tables with functions inside them.
+  ** @Class:include(mixin)@ will copy the function definitions of @mixin@ to @class@
+  ** If @mixin@ contains a function, called @included@, that function will be invoked right after the functions have been copied. It allows for modifying the class more profoundly.
+  * The function @instanceOf(class, instance)@ returns @true@ if @instance@ is an instance of the class @Class@
+  * The function @subclassOf(Superclass, Class)@ returns @true@ if @Class@ is a subclass of @SuperClass@
+  * The function @includes(mixin, Class)@ returns @true@ if @Class@ (or one of its superclasses) includes @mixin@.
+
+Features left out:
+
+  * metaclasses
+  * classes are not Objects (instances are)
+  * simulating a 'super' keyword (for performance concerns)
+  
+h1. Installation using git (recommended)
+
+The easiest way is creating a clone using git:
+
+<pre>git clone git://github.com/kikito/middleclass.git</pre>
+
+This will create a folder called @middleclass@. You can require it using:
+
+<pre>require 'middleclass.init'</pre>
+
+If you have @?/init.lua@ included in your @package.path@ variable, you can remove the @.init@ part.
+
+If you ever want to update middleclass, you can use the following commands:
+
+<pre>cd your/path/to/middleclass
+git pull origin master</pre>
+
+Git will automatically update middleclass for you.
+
+h1. Manual download
+
+Middleclass can be directly downloaded using "the github downloader":https://github.com/kikito/middleclass/archives/master
+
+You will not be able to get automatic updates with that method, but your folder size will be smaller.
+
+As an alternative, you can directly download "middleclass.lua":https://github.com/kikito/middleclass/raw/master/middleclass.lua and "BSD-LICENSE.txt":https://github.com/kikito/middleclass/raw/master/BSD-LICENSE.txt and put them in your project.
+
+In that case, you will have to require it doing something like this (will vary if you put middleclass.lua inside a folder):
+
+<pre>require 'middleclass'</pre>
+
+(This assumes you have @?.lua@ in your @package.path@, which is the default)
+
+You will have to put BSD-LICENSE.txt somewhere in your folder, or copy-paste it inside of your own license.txt file.
+  
+h1. middleclass-extras
+
+This library has a companion lib that adds a lot of interesting functionality to your objects. Give it a look at "middleclass-extras":https://github.com/kikito/middleclass-extras
+
+If you are looking for @MindState@ (now called @Stateful@), it's over there, too.
+
+h1. Specs
+
+You may find the specs for this library in "middleclass-specs":https://github.com/kikito/middleclass-specs
+
