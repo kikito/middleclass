@@ -4,26 +4,28 @@
 -- Based on YaciCode, from Julien Patte and LuaObject, from Sebastien Rocca-Serra
 -----------------------------------------------------------------------------------------------------------------------
 
-local _nilf = function() end -- empty function
-
 local _classes = setmetatable({}, {__mode = "k"})
 
-function checkClass(theClass, methodName)
-  assert(_classes[theClass], "Make sure that you are using 'Class:" .. methodName .. "' instead of 'Class." .. methodName .. "')")
+function class(name, superClass, ...)
+  superClass = superClass or Object
+  return superClass:subclass(name, ...)
 end
 
+
+
 Object = {
-  name = "Object", __mixins = {}, __classDict = {}, __instanceDict = {},
+  name = "Object", __mixins = {}, class = {}, __instanceDict = {},
   __metamethods = { '__add', '__call', '__concat', '__div', '__le', '__lt', 
                     '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm' }
 }
 
-setmetatable(Object, { 
-  __tostring = function() return "class Object" end
+setmetatable(Object, {
+  __tostring = function() return "class Object" end,
+  __index = Object.class
 })
 
-function Object:allocate()
-  checkClass(self, 'allocate')
+function Object.class:allocate()
+  assert(_classes[self], "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
   return setmetatable({ class = self }, self.__instanceDict)
 end
 
@@ -47,7 +49,9 @@ end
 
 _classes[Object] = true
 
-function Object:subclass(name)
+function Object.class:subclass(name)
+  assert(_classes[self], "Make sure that you are using 'Class:subclass' instead of 'Class.subclass'")
+  assert( type(name)=="string", "You must provide a name(string) for your class")
   local theSubClass = { name = name, superclass = self, __classDict = {}, __mixins={} }
   return theSubClass
 end
@@ -126,11 +130,6 @@ function includes(mixin, aClass)
   return includes(mixin, aClass.superclass)
 end
 
--- Creates a new class named 'name'. Uses Object if no baseClass is specified.
-function class(name, baseClass, ...)
-  baseClass = baseClass or Object
-  return baseClass:subclass(name, ...)
-end
-
 ]]
+
 

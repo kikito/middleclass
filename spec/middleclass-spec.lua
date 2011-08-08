@@ -21,7 +21,7 @@ context( 'Object', function()
 
   context('bootstrapping', function()
     test('Object has two dictionaries and mixins properly set up', function()
-      for _,m in pairs{'__mixins', '__classDict', '__instanceDict'} do
+      for _,m in pairs{'__mixins', 'class', '__instanceDict'} do
         assert_type(Object[m], "table")
       end
     end)
@@ -80,72 +80,97 @@ context( 'Object', function()
   end)
 
   context( 'subclass', function()
-    context( 'when given a name', function()
+
+    test( 'throws an error when used without the :', function()
+      assert_error(function() Object.subclass() end)
+    end)
+
+    context( 'when given a class name', function()
 
       local MyClass = Object:subclass('MyClass')
 
-      test('returns a class with the correct name', function()
+      test('it returns a class with the correct name', function()
         assert_equal(MyClass.name, 'MyClass')
       end)
 
-      test('returns a class with the correct superclass', function()
+      test('it returns a class with the correct superclass', function()
         assert_equal(MyClass.superclass, Object)
       end)
     end)
+
+    context( 'when name is given', function()
+      test( 'it throws an error', function()
+        assert_error( function() Object:subclass() end)
+      end)
+    end)
+
   end)
-
-
 
 end)
 
---[[
 
-  context( 'When creating a direct subclass of Object', function()
 
-    context( 'using Object:subclass("name")', function()
-      local MyClass = Object:subclass('MyClass')
+context( 'class()', function()
 
-      test( 'should have its name correctly set up', function()
-        assert_equal(MyClass.name, 'MyClass')
-      end)
-
-      test( 'should have Object as its superclass', function()
-        assert_equal(MyClass.superclass, Object)
-      end)
+  context( 'when given no params', function()
+    test( 'it throws an error', function()
+      assert_error(class)
     end)
-
-    context( 'When no name is given', function()
-      test( 'should throw an error', function()
-        assert_false( pcall(Object.subclass, Object) )
-      end)
-    end)
-
   end)
 
-  context( 'An instance attribute', function()
-    local Person = class('Person')
-    function Person:initialize(name)
-      self.name = name
-    end
-    
-    local AgedPerson = class('AgedPerson', Person)
-    function AgedPerson:initialize(name, age)
-      Person.initialize(self, name)
-      self.age = age
-    end
+  context( 'when given a name', function()
+    local TheClass = class('TheClass')
 
-    test('should be available after being initialized', function()
-      local bob = Person:new('bob')
-      assert_equal(bob.name, 'bob')
+    test( 'the resulting class has the correct name', function()
+      assert_equal(TheClass.name, 'TheClass')
     end)
-    
-    test('should be available after being initialized by a superclass', function()
-      local pete = AgedPerson:new('pete', 31)
-      assert_equal(pete.name, 'pete')
-      assert_equal(pete.age, 31)
+
+    test( 'the resulting class has Object as its superclass', function()
+      assert_equal(TheClass.superclass, Object)
     end)
+  end)
+--[[
+  context( 'when given a name and a superclass', function()
+    local TheSuperClass = class('TheSuperClass')
+    local TheSubClass = class('TheSubClass', TheSuperClass)
+
+    test( 'the resulting class has the correct name', function()
+      assert_equal(TheClass.name, 'TheClass')
+    end)
+
+    test( 'the restulting class has the correct superclass', function()
+     assert_equal(TheSubClass.superclass, TheSuperClass)
+    end)
+  end)
+]]
+end)
+
+--[[
+context('an instance attribute', function()
+  local Person = class('Person')
+  function Person:initialize(name)
+    self.name = name
+  end
+  
+  local AgedPerson = class('AgedPerson', Person)
+  function AgedPerson:initialize(name, age)
+    Person.initialize(self, name)
+    self.age = age
+  end
+
+  test('should be available after being initialized', function()
+    local bob = Person:new('bob')
+    assert_equal(bob.name, 'bob')
   end)
   
+  test('should be available after being initialized by a superclass', function()
+    local pete = AgedPerson:new('pete', 31)
+    assert_equal(pete.name, 'pete')
+    assert_equal(pete.age, 31)
+  end)
+  
+end)
+
   context( 'An instance method', function()
     local A = class('A')
     function A:foo() return 'foo' end
@@ -351,41 +376,7 @@ end)
 
 end)
 
-context( 'class', function()
 
-  context( 'When creating a class', function()
-
-    context( 'using class("name")', function()
-      local TheClass = class('TheClass')
-
-      test( 'should have the correct name', function()
-        assert_equal(TheClass.name, 'TheClass')
-      end)
-
-      test( 'should have Object as their superclass', function()
-        assert_equal(TheClass.superclass, Object)
-      end)
-    end)
-
-    context( 'using class("name", AClass)', function()
-      local TheSuperClass = class('TheSuperClass')
-      local TheSubClass = class('TheSubClass', TheSuperClass)
-
-      test( 'should have the correct superclass', function()
-       assert_equal(TheSubClass.superclass, TheSuperClass)
-      end)
-    end)
-
-    context( 'using no name', function()
-      test( 'class() should throw an error', function()
-        assert_error(class)
-      end)
-    end)
-  
-  end)
-    
-
-end)
 
 
 context( 'includes', function()
