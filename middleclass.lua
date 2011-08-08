@@ -6,59 +6,49 @@
 
 local _classes = setmetatable({}, {__mode = "k"})
 
-function class(name, superClass, ...)
-  superClass = superClass or Object
-  return superClass:subclass(name, ...)
+local function _initializeClass(theClass)
+  setmetatable(theClass, {
+    __tostring = function() return "class " .. theClass.name end,
+    __index    = theClass.static,
+    __newindex = theClass.__instanceDict
+  })
+
+  _classes[theClass] = true
 end
 
 Object = {
-  name = "Object", static = {},
+  name = "Object",
+  static = {},
   __mixins = {},
   __instanceDict = {},
   __metamethods = { '__add', '__call', '__concat', '__div', '__le', '__lt', 
                     '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm' }
 }
 
-setmetatable(Object, {
-  __tostring = function() return "class Object" end,
-  __index = Object.static
-})
+_initializeClass(Object)
+
+Object.initialize = function() end
 
 function Object.static:allocate()
   assert(_classes[self], "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
-  return setmetatable({ class = self }, self.__instanceDict)
+  return setmetatable({ class = self }, {__index = self.__instanceDict })
 end
 
---[[
- -- register Object on the list of classes.
-
--- creates the instance based of the class, but doesn't initialize it
-function Object.allocate(theClass)
-  
-  return setmetatable({ class = theClass }, theClass.__classDict)
-end
-
--- both creates and initializes an instance
-function Object.new(theClass, ...)
-  local instance = theClass:allocate()
+function Object.static:new(...)
+  local instance = self:allocate()
   instance:initialize(...)
   return instance
 end
 
-]]
-
-_classes[Object] = true
-
 function Object.static:subclass(name)
   assert(_classes[self], "Make sure that you are using 'Class:subclass' instead of 'Class.subclass'")
-  assert( type(name)=="string", "You must provide a name(string) for your class")
+  assert(type(name) == "string", "You must provide a name(string) for your class")
 
   local subclass = { name = name, superclass = self, __mixins = {}, static = {}, __instanceDict={} }
 
   setmetatable(subclass.static, { __index = self.static })
-  setmetatable(subclass, { __index = subclass.static })
 
-  _classes[subclass] = true
+  _initializeClass(subclass)
 
   return subclass
 end
@@ -138,5 +128,10 @@ function includes(mixin, aClass)
 end
 
 ]]
+
+function class(name, superClass, ...)
+  superClass = superClass or Object
+  return superClass:subclass(name, ...)
+end
 
 
