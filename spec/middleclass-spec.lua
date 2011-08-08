@@ -19,14 +19,6 @@ context( 'Object', function()
     end)
   end)
 
-  context('bootstrapping', function()
-    test('Object has two dictionaries and mixins properly set up', function()
-      for _,m in pairs{'__mixins', 'class', '__instanceDict'} do
-        assert_type(Object[m], "table")
-      end
-    end)
-  end)
-
   context('tostring', function()
     test('returns "class Object"', function()
       assert_equal(tostring(Object), 'class Object')
@@ -98,7 +90,7 @@ context( 'Object', function()
       end)
     end)
 
-    context( 'when name is given', function()
+    context( 'when no name is given', function()
       test( 'it throws an error', function()
         assert_error( function() Object:subclass() end)
       end)
@@ -129,20 +121,20 @@ context( 'class()', function()
       assert_equal(TheClass.superclass, Object)
     end)
   end)
---[[
+
   context( 'when given a name and a superclass', function()
     local TheSuperClass = class('TheSuperClass')
     local TheSubClass = class('TheSubClass', TheSuperClass)
 
     test( 'the resulting class has the correct name', function()
-      assert_equal(TheClass.name, 'TheClass')
+      assert_equal(TheSubClass.name, 'TheSubClass')
     end)
 
     test( 'the restulting class has the correct superclass', function()
      assert_equal(TheSubClass.superclass, TheSuperClass)
     end)
   end)
-]]
+
 end)
 
 --[[

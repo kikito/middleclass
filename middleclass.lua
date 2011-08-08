@@ -11,20 +11,20 @@ function class(name, superClass, ...)
   return superClass:subclass(name, ...)
 end
 
-
-
 Object = {
-  name = "Object", __mixins = {}, class = {}, __instanceDict = {},
+  name = "Object", static = {},
+  __mixins = {},
+  __instanceDict = {},
   __metamethods = { '__add', '__call', '__concat', '__div', '__le', '__lt', 
                     '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm' }
 }
 
 setmetatable(Object, {
   __tostring = function() return "class Object" end,
-  __index = Object.class
+  __index = Object.static
 })
 
-function Object.class:allocate()
+function Object.static:allocate()
   assert(_classes[self], "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
   return setmetatable({ class = self }, self.__instanceDict)
 end
@@ -49,11 +49,18 @@ end
 
 _classes[Object] = true
 
-function Object.class:subclass(name)
+function Object.static:subclass(name)
   assert(_classes[self], "Make sure that you are using 'Class:subclass' instead of 'Class.subclass'")
   assert( type(name)=="string", "You must provide a name(string) for your class")
-  local theSubClass = { name = name, superclass = self, __classDict = {}, __mixins={} }
-  return theSubClass
+
+  local subclass = { name = name, superclass = self, __mixins = {}, static = {}, __instanceDict={} }
+
+  setmetatable(subclass.static, { __index = self.static })
+  setmetatable(subclass, { __index = subclass.static })
+
+  _classes[subclass] = true
+
+  return subclass
 end
 
 --[[
