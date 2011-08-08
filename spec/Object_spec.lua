@@ -161,55 +161,61 @@ context('An instance method', function()
 
 end)
 
+context('A class attribute', function()
 
+  local A, B
 
---[[
+  before(function()
+    A = class('A')
+    A.static.foo = 'foo'
 
+    B = class('B', A)
+  end)
 
+  test('should be available after being initialized', function()
+    assert_equal(A.foo, 'foo')
+  end)
 
-  
-  context('A class attribute', function()
-    local A = class('A')
-    A.foo = 'foo'
-
-    local B = class('B', A)
-
-    test('should be available after being initialized', function()
-      assert_equal(A.foo, 'foo')
-    end)
-
-    test('should be available for subclasses', function()
-      assert_equal(B.foo, 'foo')
-    end)
-    
-    test('should be overridable by subclasses, without affecting the superclasses', function()
-      B.foo = 'chunky bacon'
-      assert_equal(B.foo, 'chunky bacon')
-      assert_equal(A.foo, 'foo')
-    end)
+  test('should be available for subclasses', function()
+    assert_equal(B.foo, 'foo')
   end)
   
-  context('A class method', function()
-    local A = class('A')
+  test('should be overridable by subclasses, without affecting the superclasses', function()
+    B.foo = 'chunky bacon'
+    assert_equal(B.foo, 'chunky bacon')
+    assert_equal(A.foo, 'foo')
+  end)
+
+end)
+
+context('A class method', function()
+
+  local A, B
+
+  before(function()
+    A = class('A')
     function A.foo(theClass) return 'foo' end
 
-    local B = class('B', A)
+    B = class('B', A)
+  end)
 
-    test('should be available after being initialized', function()
-      assert_equal(A:foo(), 'foo')
-    end)
+  test('should be available after being initialized', function()
+    assert_equal(A:foo(), 'foo')
+  end)
 
-    test('should be available for subclasses', function()
-      assert_equal(B:foo(), 'foo')
-    end)
-    
-    test('should be overridable by subclasses, without affecting the superclasses', function()
-      function B.foo(theClass) return 'chunky bacon' end
-      assert_equal(B:foo(), 'chunky bacon')
-      assert_equal(A:foo(), 'foo')
-    end)
+  test('should be available for subclasses', function()
+    assert_equal(B:foo(), 'foo')
   end)
   
+  test('should be overridable by subclasses, without affecting the superclasses', function()
+    function B.foo(theClass) return 'chunky bacon' end
+    assert_equal(B:foo(), 'chunky bacon')
+    assert_equal(A:foo(), 'foo')
+  end)
+
+end)
+
+--[[
   context('A Mixin', function()
 
     local Class1 = class('Class1')
