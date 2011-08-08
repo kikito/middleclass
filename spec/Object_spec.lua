@@ -1,6 +1,6 @@
 require 'middleclass'
 
-context( 'Object', function()
+context('Object', function()
 
   context('name', function()
     test('is correctly set', function()
@@ -25,7 +25,7 @@ context( 'Object', function()
 
     context('allocate', function()
 
-      test( 'allocates instances properly', function()
+      test('allocates instances properly', function()
         local instance = MyClass:allocate()
         assert_equal(instance.class, MyClass)
       end)
@@ -39,7 +39,7 @@ context( 'Object', function()
         assert_nil(allocated.mark)
       end)
 
-      test( 'can be overriden', function()
+      test('can be overriden', function()
         function MyClass.static:allocate()
           local instance = Object:allocate()
           instance.mark = true
@@ -54,7 +54,7 @@ context( 'Object', function()
 
     context('new', function()
 
-      test( 'initializes instances properly', function()
+      test('initializes instances properly', function()
         local instance = MyClass:new()
         assert_equal(instance.class, MyClass)
       end)
@@ -72,13 +72,13 @@ context( 'Object', function()
 
   end)
 
-  context( 'subclass', function()
+  context('subclass', function()
 
-    test( 'throws an error when used without the :', function()
+    test('throws an error when used without the :', function()
       assert_error(function() Object.subclass() end)
     end)
 
-    context( 'when given a class name', function()
+    context('when given a class name', function()
 
       local MyClass = Object:subclass('MyClass')
 
@@ -91,8 +91,8 @@ context( 'Object', function()
       end)
     end)
 
-    context( 'when no name is given', function()
-      test( 'it throws an error', function()
+    context('when no name is given', function()
+      test('it throws an error', function()
         assert_error( function() Object:subclass() end)
       end)
     end)
@@ -101,94 +101,74 @@ context( 'Object', function()
 
 end)
 
+context('An instance attribute', function()
 
+  local Person
 
-context( 'class()', function()
-
-  context( 'when given no params', function()
-    test( 'it throws an error', function()
-      assert_error(class)
-    end)
+  before(function()
+    Person = class('Person')
+    function Person:initialize(name)
+      self.name = name
+    end
   end)
 
-  context( 'when given a name', function()
-    local TheClass = class('TheClass')
-
-    test( 'the resulting class has the correct name', function()
-      assert_equal(TheClass.name, 'TheClass')
-    end)
-
-    test( 'the resulting class has Object as its superclass', function()
-      assert_equal(TheClass.superclass, Object)
-    end)
-  end)
-
-  context( 'when given a name and a superclass', function()
-    local TheSuperClass = class('TheSuperClass')
-    local TheSubClass = class('TheSubClass', TheSuperClass)
-
-    test( 'the resulting class has the correct name', function()
-      assert_equal(TheSubClass.name, 'TheSubClass')
-    end)
-
-    test( 'the restulting class has the correct superclass', function()
-     assert_equal(TheSubClass.superclass, TheSuperClass)
-    end)
-  end)
-
-end)
-
---[[
-context('an instance attribute', function()
-  local Person = class('Person')
-  function Person:initialize(name)
-    self.name = name
-  end
-  
-  local AgedPerson = class('AgedPerson', Person)
-  function AgedPerson:initialize(name, age)
-    Person.initialize(self, name)
-    self.age = age
-  end
-
-  test('should be available after being initialized', function()
+  test('is available in the instance after being initialized', function()
     local bob = Person:new('bob')
     assert_equal(bob.name, 'bob')
   end)
   
-  test('should be available after being initialized by a superclass', function()
+  test('is available in the instance after being initialized by a superclass', function()
+    local AgedPerson = class('AgedPerson', Person)
+    function AgedPerson:initialize(name, age)
+      Person.initialize(self, name)
+      self.age = age
+    end
+
     local pete = AgedPerson:new('pete', 31)
     assert_equal(pete.name, 'pete')
     assert_equal(pete.age, 31)
   end)
-  
+
 end)
 
-  context( 'An instance method', function()
-    local A = class('A')
-    function A:foo() return 'foo' end
-    function A:bar() return 'bar' end
-    
-    local B = class('B', A)
-    function B:foo() return 'baz' end
-    
-    local a = A:new()
-    local b = B:new()
+context('An instance method', function()
 
-    test('should be available for any instance', function()
-      assert_equal(a:foo(), 'foo')
-    end)
+  local A, B, a, b
+
+  before(function()
+    A = class('A')
+    function A:overridden() return 'foo' end
+    function A:regular() return 'regular' end
     
-    test('should be inheritable', function()
-      assert_equal(b:bar(), 'bar')
-    end)
+    B = class('B', A)
+    function B:overridden() return 'bar' end
     
-    test('should be overridable', function()
-      assert_equal(b:foo(), 'baz')
-    end)
+    a = A:new()
+    b = B:new()
+  end)
+
+  test('should be available for any instance', function()
+    assert_equal(a:overridden(), 'foo')
   end)
   
-  context( 'A class attribute', function()
+  test('should be inheritable', function()
+    assert_equal(b:regular(), 'regular')
+  end)
+  
+  test('should be overridable', function()
+    assert_equal(b:overridden(), 'bar')
+  end)
+
+end)
+
+
+
+--[[
+
+
+
+  
+  context('A class attribute', function()
     local A = class('A')
     A.foo = 'foo'
 
@@ -209,7 +189,7 @@ end)
     end)
   end)
   
-  context( 'A class method', function()
+  context('A class method', function()
     local A = class('A')
     function A.foo(theClass) return 'foo' end
 
@@ -230,7 +210,7 @@ end)
     end)
   end)
   
-  context( 'A Mixin', function()
+  context('A Mixin', function()
 
     local Class1 = class('Class1')
     local Mixin = {}
@@ -261,7 +241,7 @@ end)
 
   end)
   
-  context( 'Metamethods', function()
+  context('Metamethods', function()
     
     test('__index should throw an error', function()
       local NonIndexable = class('NonIndexable')
@@ -372,9 +352,9 @@ end)
 
 
 
-context( 'includes', function()
+context('includes', function()
 
-  context( 'Primitives', function()
+  context('Primitives', function()
     local o = Object:new()
     local primitives = {nil, 1, 'hello', {}, function() end}
     
@@ -409,7 +389,7 @@ context( 'includes', function()
 
   end)
 
-  context( 'A class', function()
+  context('A class', function()
 
     local Class1 = class('Class1')
     local Class2 = class('Class2', Class1)
@@ -436,9 +416,9 @@ context( 'includes', function()
 
 end)
 
-context( 'instanceOf', function()
+context('instanceOf', function()
 
-  context( 'Primitives', function()
+  context('Primitives', function()
     local o = Object:new()
     local primitives = {nil, 1, 'hello', {}, function() end}
     
@@ -473,7 +453,7 @@ context( 'instanceOf', function()
 
   end)
 
-  context( 'An instance', function()
+  context('An instance', function()
     local Class1 = class('Class1')
     local Class2 = class('Class2', Class1)
     local Class3 = class('Class3', Class2)
@@ -517,9 +497,9 @@ context( 'instanceOf', function()
 end)
 
 
-context( 'subclassOf', function()
+context('subclassOf', function()
 
-  context( 'Primitives', function()
+  context('Primitives', function()
     local primitives = {nil, 1, 'hello', {}, function() end}
     
     for _,primitive in pairs(primitives) do
@@ -553,7 +533,7 @@ context( 'subclassOf', function()
 
   end)
   
-  context( 'Any class (except Object)', function()
+  context('Any class (except Object)', function()
     local Class1 = class('Class1')
     local Class2 = class('Class2', Class1)
     local Class3 = class('Class3', Class2)

@@ -6,14 +6,24 @@
 
 local _classes = setmetatable({}, {__mode = "k"})
 
-local function _initializeClass(theClass)
-  setmetatable(theClass, {
-    __tostring = function() return "class " .. theClass.name end,
-    __index    = theClass.static,
-    __newindex = theClass.__instanceDict
+local function _initializeClass(klass, super)
+
+  local dict = klass.__instanceDict
+
+  if super then
+    setmetatable(dict, { __index = super.__instanceDict })
+    setmetatable(klass.static, { __index = function(_,k) return dict[k] or super[k] end })
+  else
+    setmetatable(klass.static, { __index = function(_,k) return dict[k] end })
+  end
+
+  setmetatable(klass, {
+    __tostring = function() return "class " .. klass.name end,
+    __index    = klass.static,
+    __newindex = klass.__instanceDict
   })
 
-  _classes[theClass] = true
+  _classes[klass] = true
 end
 
 Object = {
@@ -44,11 +54,9 @@ function Object.static:subclass(name)
   assert(_classes[self], "Make sure that you are using 'Class:subclass' instead of 'Class.subclass'")
   assert(type(name) == "string", "You must provide a name(string) for your class")
 
-  local subclass = { name = name, superclass = self, __mixins = {}, static = {}, __instanceDict={} }
+  local subclass = { name = name, superclass = self, static = {}, __mixins = {}, __instanceDict={} }
 
-  setmetatable(subclass.static, { __index = self.static })
-
-  _initializeClass(subclass)
+  _initializeClass(subclass, self)
 
   return subclass
 end
@@ -56,61 +64,61 @@ end
 --[[
 
 -- creates a subclass
-function Object.subclass(theClass, name)
-  assert(_classes[theClass], "Use Class:subclass instead of Class.subclass")
+function Object.subclass(klass, name)
+  assert(_classes[klass], "Use Class:subclass instead of Class.subclass")
   assert( type(name)=="string", "You must provide a name(string) for your class")
 
-  local theSubClass = { name = name, superclass = theClass, __classDict = {}, __mixins={} }
+  local thesubclass = { name = name, super = klass, __classDict = {}, __mixins={} }
   
-  local dict = theSubClass.__classDict   -- classDict contains all the [meta]methods of the class
+  local dict = thesubclass.__classDict   -- classDict contains all the [meta]methods of the class
   dict.__index = dict                    -- It "points to itself" so instances can use it as a metatable.
-  local superDict = theClass.__classDict -- The superclass' classDict
+  local superDict = klass.__classDict -- The super' classDict
 
   setmetatable(dict, superDict) -- when a method isn't found on classDict, 'escalate upwards'.
 
-  setmetatable(theSubClass, {
+  setmetatable(thesubclass, {
     __index = dict,                              -- look for stuff on the dict
     __newindex = function(_, methodName, method) -- ensure that __index isn't modified by mistake
         assert(methodName ~= '__index', "Can't modify __index. Include middleclass-extras.Indexable and use 'index' instead")
         rawset(dict, methodName , method)
       end,
     __tostring = function() return ("class ".. name) end,      -- allows tostring(MyClass)
-    __call = function(_, ...) return theSubClass:new(...) end  -- allows MyClass(...) instead of MyClass:new(...)
+    __call = function(_, ...) return thesubclass:new(...) end  -- allows MyClass(...) instead of MyClass:new(...)
   })
 
-  for _,mmName in ipairs(theClass.__metamethods) do -- Creates the initial metamethods
+  for _,mmName in ipairs(klass.__metamethods) do -- Creates the initial metamethods
     dict[mmName]= function(...)           -- by default, they just 'look up' for an implememtation
       local method = superDict[mmName]    -- and if none found, they throw an error
-      assert( type(method)=='function', tostring(theSubClass) .. " doesn't implement metamethod '" .. mmName .. "'" )
+      assert( type(method)=='function', tostring(thesubclass) .. " doesn't implement metamethod '" .. mmName .. "'" )
       return method(...)
     end
   end
 
-  theSubClass.initialize = function(instance,...) theClass.initialize(instance, ...) end
-  _classes[theSubClass]= true -- registers the new class on the list of _classes
-  theClass:subclassed(theSubClass)   -- hook method. By default it does nothing
+  thesubclass.initialize = function(instance,...) klass.initialize(instance, ...) end
+  _classes[thesubclass]= true -- registers the new class on the list of _classes
+  klass:subclassed(thesubclass)   -- hook method. By default it does nothing
 
-  return theSubClass
+  return thesubclass
 end
 
 -- Mixin extension function - simulates very basically ruby's include. Receives a table table, probably with functions.
--- Its contents are copied to theClass, with one exception: the included() method will be called instead of copied
-function Object.include(theClass, mixin, ... )
-  assert(_classes[theClass], "Use class:include instead of class.include")
+-- Its contents are copied to klass, with one exception: the included() method will be called instead of copied
+function Object.include(klass, mixin, ... )
+  assert(_classes[klass], "Use class:include instead of class.include")
   assert(type(mixin)=='table', "mixin must be a table")
   for methodName,method in pairs(mixin) do
-    if methodName ~="included" then theClass[methodName] = method end
+    if methodName ~="included" then klass[methodName] = method end
   end
-  if type(mixin.included)=="function" then mixin:included(theClass, ... ) end
-  theClass.__mixins[mixin] = mixin
-  return theClass
+  if type(mixin.included)=="function" then mixin:included(klass, ... ) end
+  klass.__mixins[mixin] = mixin
+  return klass
 end
 
 -- Returns true if aClass is a subclass of other, false otherwise
 function subclassOf(other, aClass)
   if not _classes[aClass] or not _classes[other] then return false end
-  if aClass.superclass==nil then return false end -- aClass is Object, or a non-class
-  return aClass.superclass == other or subclassOf(other, aClass.superclass)
+  if aClass.super==nil then return false end -- aClass is Object, or a non-class
+  return aClass.super == other or subclassOf(other, aClass.super)
 end
 
 -- Returns true if obj is an instance of aClass (or one of its subclasses) false otherwise
@@ -120,18 +128,18 @@ function instanceOf(aClass, obj)
   return subclassOf(aClass, obj.class)
 end
 
--- Returns true if the mixin has already been included on a class (or a superclass)
+-- Returns true if the mixin has already been included on a class (or a super)
 function includes(mixin, aClass)
   if not _classes[aClass] then return false end
   if aClass.__mixins[mixin]==mixin then return true end
-  return includes(mixin, aClass.superclass)
+  return includes(mixin, aClass.super)
 end
 
 ]]
 
-function class(name, superClass, ...)
-  superClass = superClass or Object
-  return superClass:subclass(name, ...)
+function class(name, super, ...)
+  super = super or Object
+  return super:subclass(name, ...)
 end
 
 
