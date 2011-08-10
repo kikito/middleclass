@@ -20,7 +20,8 @@ local function _initializeClass(klass, super)
   setmetatable(klass, {
     __tostring = function() return "class " .. klass.name end,
     __index    = klass.static,
-    __newindex = klass.__instanceDict
+    __newindex = klass.__instanceDict,
+    __call     = function(_, ...) return klass:new(...) end
   })
 
   _classes[klass] = true
@@ -114,20 +115,6 @@ function Object.include(klass, mixin, ... )
   return klass
 end
 
--- Returns true if aClass is a subclass of other, false otherwise
-function subclassOf(other, aClass)
-  if not _classes[aClass] or not _classes[other] then return false end
-  if aClass.super==nil then return false end -- aClass is Object, or a non-class
-  return aClass.super == other or subclassOf(other, aClass.super)
-end
-
--- Returns true if obj is an instance of aClass (or one of its subclasses) false otherwise
-function instanceOf(aClass, obj)
-  if not _classes[aClass] or type(obj)~='table' or not _classes[obj.class] then return false end
-  if obj.class==aClass then return true end
-  return subclassOf(aClass, obj.class)
-end
-
 -- Returns true if the mixin has already been included on a class (or a super)
 function includes(mixin, aClass)
   if not _classes[aClass] then return false end
@@ -140,6 +127,17 @@ end
 function class(name, super, ...)
   super = super or Object
   return super:subclass(name, ...)
+end
+
+function instanceOf(aClass, obj)
+  if not _classes[aClass] or type(obj) ~= 'table' or not _classes[obj.class] then return false end
+  if obj.class == aClass then return true end
+  return subclassOf(aClass, obj.class)
+end
+
+function subclassOf(other, aClass)
+  if not _classes[aClass] or not _classes[other] or  aClass.superclass == nil then return false end
+  return aClass.superclass == other or subclassOf(other, aClass.superclass)
 end
 
 

@@ -13,6 +13,14 @@ context('Object', function()
       assert_equal(tostring(Object), 'class Object')
     end)
   end)
+  
+  context('Object()', function()
+    test('returns an object, like Object:new()', function()
+      local obj = Object()
+      assert_true(instanceOf(Object))
+    end)
+  end)
+  
 
   context('instance creation', function()
 
@@ -101,152 +109,12 @@ context('Object', function()
 
 end)
 
-context('An instance attribute', function()
 
-  local Person
 
-  before(function()
-    Person = class('Person')
-    function Person:initialize(name)
-      self.name = name
-    end
-  end)
 
-  test('is available in the instance after being initialized', function()
-    local bob = Person:new('bob')
-    assert_equal(bob.name, 'bob')
-  end)
-  
-  test('is available in the instance after being initialized by a superclass', function()
-    local AgedPerson = class('AgedPerson', Person)
-    function AgedPerson:initialize(name, age)
-      Person.initialize(self, name)
-      self.age = age
-    end
-
-    local pete = AgedPerson:new('pete', 31)
-    assert_equal(pete.name, 'pete')
-    assert_equal(pete.age, 31)
-  end)
-
-end)
-
-context('An instance method', function()
-
-  local A, B, a, b
-
-  before(function()
-    A = class('A')
-    function A:overridden() return 'foo' end
-    function A:regular() return 'regular' end
-    
-    B = class('B', A)
-    function B:overridden() return 'bar' end
-    
-    a = A:new()
-    b = B:new()
-  end)
-
-  test('should be available for any instance', function()
-    assert_equal(a:overridden(), 'foo')
-  end)
-  
-  test('should be inheritable', function()
-    assert_equal(b:regular(), 'regular')
-  end)
-  
-  test('should be overridable', function()
-    assert_equal(b:overridden(), 'bar')
-  end)
-
-end)
-
-context('A class attribute', function()
-
-  local A, B
-
-  before(function()
-    A = class('A')
-    A.static.foo = 'foo'
-
-    B = class('B', A)
-  end)
-
-  test('should be available after being initialized', function()
-    assert_equal(A.foo, 'foo')
-  end)
-
-  test('should be available for subclasses', function()
-    assert_equal(B.foo, 'foo')
-  end)
-  
-  test('should be overridable by subclasses, without affecting the superclasses', function()
-    B.foo = 'chunky bacon'
-    assert_equal(B.foo, 'chunky bacon')
-    assert_equal(A.foo, 'foo')
-  end)
-
-end)
-
-context('A class method', function()
-
-  local A, B
-
-  before(function()
-    A = class('A')
-    function A.foo(theClass) return 'foo' end
-
-    B = class('B', A)
-  end)
-
-  test('should be available after being initialized', function()
-    assert_equal(A:foo(), 'foo')
-  end)
-
-  test('should be available for subclasses', function()
-    assert_equal(B:foo(), 'foo')
-  end)
-  
-  test('should be overridable by subclasses, without affecting the superclasses', function()
-    function B.foo(theClass) return 'chunky bacon' end
-    assert_equal(B:foo(), 'chunky bacon')
-    assert_equal(A:foo(), 'foo')
-  end)
-
-end)
 
 --[[
-  context('A Mixin', function()
-
-    local Class1 = class('Class1')
-    local Mixin = {}
-    function Mixin:included(theClass) theClass.includesMixin = true end
-    function Mixin:foo() return 'foo' end
-    function Mixin:bar() return 'bar' end
-    Class1:include(Mixin)
-
-    Class2 = class('Class2', Class1)
-    function Class2:foo() return 'baz' end
-
-    test('should invoke the "included" method when included', function()
-      assert_true(Class1.includesMixin)
-    end)
-    
-    test('should have all its functions (except "included") copied to its target class', function()
-      assert_equal(Class1:foo(), 'foo')
-      assert_equal(Class1.included, nil)
-    end)
-    
-    test('should make its functions available to subclasses', function()
-      assert_equal(Class2:bar(), 'bar')
-    end)
-    
-    test('should allow overriding of methods on subclasses', function()
-      assert_equal(Class2:foo(), 'baz')
-    end)
-
-  end)
-  
+ 
   context('Metamethods', function()
     
     test('__index should throw an error', function()
@@ -422,159 +290,6 @@ context('includes', function()
 
 end)
 
-context('instanceOf', function()
-
-  context('Primitives', function()
-    local o = Object:new()
-    local primitives = {nil, 1, 'hello', {}, function() end}
-    
-    for _,primitive in pairs(primitives) do
-      local theType = type(primitive)
-      context('A ' .. theType, function()
-        
-        local f1 = function() return instanceOf(Object, primitive) end
-        local f2 = function() return instanceOf(primitive, o) end
-        local f3 = function() return instanceOf(primitive, primitive) end
-        
-        context('should not throw errors', function()
-          test('instanceOf(Object, '.. theType ..')', function()
-            assert_not_error(f1)
-          end)
-          test('instanceOf(' .. theType .. ', Object:new())', function()
-            assert_not_error(f2)
-          end)
-          test('instanceOf(' .. theType .. ',' .. theType ..')', function()
-            assert_not_error(f3)
-          end)
-        end)
-        
-        test('should make instanceOf return false', function()
-          assert_false(f1())
-          assert_false(f2())
-          assert_false(f3())
-        end)
-
-      end)
-    end -- for
-
-  end)
-
-  context('An instance', function()
-    local Class1 = class('Class1')
-    local Class2 = class('Class2', Class1)
-    local Class3 = class('Class3', Class2)
-    local UnrelatedClass = class('Unrelated')
-    
-    local o1, o2, o3 = Class1:new(), Class2:new(), Class3:new()
-    
-    test('should be instanceOf(Object)', function()
-      assert_true(instanceOf(Object, o1))
-      assert_true(instanceOf(Object, o2))
-      assert_true(instanceOf(Object, o3))
-    end)
-    
-    test('should be instanceOf its class', function()
-      assert_true(instanceOf(Class1, o1))
-      assert_true(instanceOf(Class2, o2))
-      assert_true(instanceOf(Class3, o3))
-    end)
-    
-    test('should be instanceOf its class\' superclasses', function()
-      assert_true(instanceOf(Class1, o2))
-      assert_true(instanceOf(Class1, o3))
-      assert_true(instanceOf(Class2, o3))
-    end)
-    
-    test('should not be an instanceOf its class\' subclasses', function()
-      assert_false(instanceOf(Class2, o1))
-      assert_false(instanceOf(Class3, o1))
-      assert_false(instanceOf(Class3, o2))
-    end)
-    
-    test('should not be an instanceOf an unrelated class', function()
-      assert_false(instanceOf(UnrelatedClass, o1))
-      assert_false(instanceOf(UnrelatedClass, o2))
-      assert_false(instanceOf(UnrelatedClass, o3))
-    end)
-
-  end)
-
-
-end)
-
-
-context('subclassOf', function()
-
-  context('Primitives', function()
-    local primitives = {nil, 1, 'hello', {}, function() end}
-    
-    for _,primitive in pairs(primitives) do
-      local theType = type(primitive)
-      context('A ' .. theType, function()
-        
-        local f1 = function() return subclassOf(Object, primitive) end
-        local f2 = function() return subclassOf(primitive, o) end
-        local f3 = function() return subclassOf(primitive, primitive) end
-        
-        context('should not throw errors', function()
-          test('subclassOf(Object, '.. theType ..')', function()
-            assert_not_error(f1)
-          end)
-          test('subclassOf(' .. theType .. ', Object:new())', function()
-            assert_not_error(f2)
-          end)
-          test('subclassOf(' .. theType .. ',' .. theType ..')', function()
-            assert_not_error(f3)
-          end)
-        end)
-        
-        test('should make subclassOf return false', function()
-          assert_false(f1())
-          assert_false(f2())
-          assert_false(f3())
-        end)
-
-      end)
-    end
-
-  end)
-  
-  context('Any class (except Object)', function()
-    local Class1 = class('Class1')
-    local Class2 = class('Class2', Class1)
-    local Class3 = class('Class3', Class2)
-    local UnrelatedClass = class('Unrelated')
-    
-    test('should be subclassOf(Object)', function()
-      assert_true(subclassOf(Object, Class1))
-      assert_true(subclassOf(Object, Class2))
-      assert_true(subclassOf(Object, Class3))
-    end)
-    
-    test('should be subclassOf its direct superclass', function()
-      assert_true(subclassOf(Class1, Class2))
-      assert_true(subclassOf(Class2, Class3))
-    end)
-    
-    test('should be subclassOf its ancestors', function()
-      assert_true(subclassOf(Class1, Class3))
-    end)
-    
-    test('should not be an subclassOf its class\' subclasses', function()
-      assert_false(subclassOf(Class2, Class1))
-      assert_false(subclassOf(Class3, Class1))
-      assert_false(subclassOf(Class3, Class2))
-    end)
-    
-    test('should not be an subclassOf an unrelated class', function()
-      assert_false(subclassOf(UnrelatedClass, Class1))
-      assert_false(subclassOf(UnrelatedClass, Class2))
-      assert_false(subclassOf(UnrelatedClass, Class3))
-    end)
-
-  end)
-
-end)
 ]]
 
 
