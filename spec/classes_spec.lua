@@ -16,6 +16,14 @@ context('Class', function()
     end)
   end)
 
+  context('()', function()
+    test('returns an object, like Class:new()', function()
+      local TheClass = class('TheClass')
+      local obj = TheClass()
+      assert_true(instanceOf(TheClass, obj))
+    end)
+  end)
+
   context('attributes', function()
 
     local A, B

@@ -13,14 +13,13 @@ context('Object', function()
       assert_equal(tostring(Object), 'class Object')
     end)
   end)
-  
-  context('Object()', function()
+
+  context('()', function()
     test('returns an object, like Object:new()', function()
       local obj = Object()
-      assert_true(instanceOf(Object))
+      assert_true(instanceOf(Object, obj))
     end)
   end)
-  
 
   context('instance creation', function()
 

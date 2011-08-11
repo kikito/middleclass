@@ -66,16 +66,6 @@ end
 
 -- creates a subclass
 function Object.subclass(klass, name)
-  assert(_classes[klass], "Use Class:subclass instead of Class.subclass")
-  assert( type(name)=="string", "You must provide a name(string) for your class")
-
-  local thesubclass = { name = name, super = klass, __classDict = {}, __mixins={} }
-  
-  local dict = thesubclass.__classDict   -- classDict contains all the [meta]methods of the class
-  dict.__index = dict                    -- It "points to itself" so instances can use it as a metatable.
-  local superDict = klass.__classDict -- The super' classDict
-
-  setmetatable(dict, superDict) -- when a method isn't found on classDict, 'escalate upwards'.
 
   setmetatable(thesubclass, {
     __index = dict,                              -- look for stuff on the dict
