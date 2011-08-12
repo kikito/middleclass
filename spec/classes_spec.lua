@@ -1,6 +1,6 @@
 require 'middleclass'
 
-context('Class', function()
+context('A Class', function()
 
   context('name', function()
     test('is correctly set', function()
@@ -35,16 +35,16 @@ context('Class', function()
       B = class('B', A)
     end)
 
-    test('should be available after being initialized', function()
+    test('are available after being initialized', function()
       assert_equal(A.foo, 'foo')
     end)
 
-    test('should be available for subclasses', function()
+    test('are available for subclasses', function()
       assert_equal(B.foo, 'foo')
     end)
     
-    test('should be overridable by subclasses, without affecting the superclasses', function()
-      B.foo = 'chunky bacon'
+    test('are overridable by subclasses, without affecting the superclasses', function()
+      B.static.foo = 'chunky bacon'
       assert_equal(B.foo, 'chunky bacon')
       assert_equal(A.foo, 'foo')
     end)
@@ -57,21 +57,21 @@ context('Class', function()
 
     before(function()
       A = class('A')
-      function A.foo(theClass) return 'foo' end
+      function A.static:foo() return 'foo' end
 
       B = class('B', A)
     end)
 
-    test('should be available after being initialized', function()
+    test('are available after being initialized', function()
       assert_equal(A:foo(), 'foo')
     end)
 
-    test('should be available for subclasses', function()
+    test('are available for subclasses', function()
       assert_equal(B:foo(), 'foo')
     end)
     
-    test('should be overridable by subclasses, without affecting the superclasses', function()
-      function B.foo(theClass) return 'chunky bacon' end
+    test('are overridable by subclasses, without affecting the superclasses', function()
+      function B.static:foo() return 'chunky bacon' end
       assert_equal(B:foo(), 'chunky bacon')
       assert_equal(A:foo(), 'foo')
     end)

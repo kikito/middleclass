@@ -1,3 +1,5 @@
+require 'middleclass'
+
 context('instanceOf', function()
 
   context('nils, integers, strings, tables, and functions', function()
@@ -12,7 +14,7 @@ context('instanceOf', function()
         local f2 = function() return instanceOf(primitive, o) end
         local f3 = function() return instanceOf(primitive, primitive) end
         
-        context('should not throw errors', function()
+        context('does not throw errors', function()
           test('instanceOf(Object, '.. theType ..')', function()
             assert_not_error(f1)
           end)
@@ -24,7 +26,7 @@ context('instanceOf', function()
           end)
         end)
         
-        test('should make instanceOf return false', function()
+        test('makes instanceOf return false', function()
           assert_false(f1())
           assert_false(f2())
           assert_false(f3())
@@ -43,31 +45,31 @@ context('instanceOf', function()
     
     local o1, o2, o3 = Class1:new(), Class2:new(), Class3:new()
     
-    test('should be instanceOf(Object)', function()
+    test('is instanceOf(Object)', function()
       assert_true(instanceOf(Object, o1))
       assert_true(instanceOf(Object, o2))
       assert_true(instanceOf(Object, o3))
     end)
     
-    test('should be instanceOf its class', function()
+    test('is instanceOf its class', function()
       assert_true(instanceOf(Class1, o1))
       assert_true(instanceOf(Class2, o2))
       assert_true(instanceOf(Class3, o3))
     end)
     
-    test('should be instanceOf its class\' superclasses', function()
+    test('is instanceOf its class\' superclasses', function()
       assert_true(instanceOf(Class1, o2))
       assert_true(instanceOf(Class1, o3))
       assert_true(instanceOf(Class2, o3))
     end)
     
-    test('should not be an instanceOf its class\' subclasses', function()
+    test('is not instanceOf its class\' subclasses', function()
       assert_false(instanceOf(Class2, o1))
       assert_false(instanceOf(Class3, o1))
       assert_false(instanceOf(Class3, o2))
     end)
     
-    test('should not be an instanceOf an unrelated class', function()
+    test('is not instanceOf an unrelated class', function()
       assert_false(instanceOf(UnrelatedClass, o1))
       assert_false(instanceOf(UnrelatedClass, o2))
       assert_false(instanceOf(UnrelatedClass, o3))

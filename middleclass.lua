@@ -6,43 +6,67 @@
 
 local _classes = setmetatable({}, {__mode = "k"})
 
-local function _initializeClass(klass, super)
-
+local function _setClassDictionariesMetatables(klass)
   local dict = klass.__instanceDict
+  local super = klass.superclass
+
+  dict.__index = dict
 
   if super then
-    setmetatable(dict, { __index = super.__instanceDict })
+    setmetatable(dict, super.__instanceDict)
     setmetatable(klass.static, { __index = function(_,k) return dict[k] or super[k] end })
   else
     setmetatable(klass.static, { __index = function(_,k) return dict[k] end })
   end
+end
 
+local function _setClassMetatable(klass)
   setmetatable(klass, {
     __tostring = function() return "class " .. klass.name end,
     __index    = klass.static,
     __newindex = klass.__instanceDict,
     __call     = function(_, ...) return klass:new(...) end
   })
-
-  _classes[klass] = true
 end
 
-Object = {
-  name = "Object",
-  static = {},
-  __mixins = {},
-  __instanceDict = {},
-  __metamethods = { '__add', '__call', '__concat', '__div', '__le', '__lt', 
-                    '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm' }
-}
+local function _createClass(name, super)
+  local klass = { name = name, superclass = super, static = {}, __mixins = {}, __instanceDict={} }
 
-_initializeClass(Object)
+  _setClassDictionariesMetatables(klass)
+  _setClassMetatable(klass)
+  _classes[klass] = true
 
-Object.initialize = function() end
+  return klass
+end
+
+local function _createLookupMetamethod(klass, methodName)
+  return function(...)
+    local method = klass.superclass[methodName]
+    assert( type(method)=='function', tostring(klass) .. " doesn't implement metamethod '" .. methodName .. "'" )
+    return method(...)
+  end
+end
+
+local function _setClassMetamethods(klass)
+  for _,m in ipairs(klass.__metamethods) do
+    klass[m]= _createLookupMetamethod(klass, m)
+  end
+end
+
+local function _setDefaultInitializeMethod(klass)
+  klass.initialize = function(instance, ...)
+    return klass.superclass.initialize(instance, ...)
+  end
+end
+
+Object = _createClass("Object", nil)
+
+Object.static.__metamethods = { '__add', '__call', '__concat', '__div', '__le', '__lt', 
+                                '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm' }
 
 function Object.static:allocate()
   assert(_classes[self], "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
-  return setmetatable({ class = self }, {__index = self.__instanceDict })
+  return setmetatable({ class = self }, self.__instanceDict)
 end
 
 function Object.static:new(...)
@@ -55,38 +79,22 @@ function Object.static:subclass(name)
   assert(_classes[self], "Make sure that you are using 'Class:subclass' instead of 'Class.subclass'")
   assert(type(name) == "string", "You must provide a name(string) for your class")
 
-  local subclass = { name = name, superclass = self, static = {}, __mixins = {}, __instanceDict={} }
-
-  _initializeClass(subclass, self)
+  local subclass = _createClass(name, self)
+  _setClassMetamethods(subclass)
+  _setDefaultInitializeMethod(subclass)
 
   return subclass
 end
+
+function Object:initialize() end
+
+function Object:__tostring() return "instance of " .. tostring(self.class) end
 
 --[[
 
 -- creates a subclass
 function Object.subclass(klass, name)
 
-  setmetatable(thesubclass, {
-    __index = dict,                              -- look for stuff on the dict
-    __newindex = function(_, methodName, method) -- ensure that __index isn't modified by mistake
-        assert(methodName ~= '__index', "Can't modify __index. Include middleclass-extras.Indexable and use 'index' instead")
-        rawset(dict, methodName , method)
-      end,
-    __tostring = function() return ("class ".. name) end,      -- allows tostring(MyClass)
-    __call = function(_, ...) return thesubclass:new(...) end  -- allows MyClass(...) instead of MyClass:new(...)
-  })
-
-  for _,mmName in ipairs(klass.__metamethods) do -- Creates the initial metamethods
-    dict[mmName]= function(...)           -- by default, they just 'look up' for an implememtation
-      local method = superDict[mmName]    -- and if none found, they throw an error
-      assert( type(method)=='function', tostring(thesubclass) .. " doesn't implement metamethod '" .. mmName .. "'" )
-      return method(...)
-    end
-  end
-
-  thesubclass.initialize = function(instance,...) klass.initialize(instance, ...) end
-  _classes[thesubclass]= true -- registers the new class on the list of _classes
   klass:subclassed(thesubclass)   -- hook method. By default it does nothing
 
   return thesubclass

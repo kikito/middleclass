@@ -1,6 +1,6 @@
 require 'middleclass'
 
-context('Instance', function()
+context('An instance', function()
 
   context('attributes', function()
 
@@ -48,15 +48,15 @@ context('Instance', function()
       b = B:new()
     end)
 
-    test('should be available for any instance', function()
+    test('are available for any instance', function()
       assert_equal(a:overridden(), 'foo')
     end)
     
-    test('should be inheritable', function()
+    test('are inheritable', function()
       assert_equal(b:regular(), 'regular')
     end)
     
-    test('should be overridable', function()
+    test('are overridable', function()
       assert_equal(b:overridden(), 'bar')
     end)
 
