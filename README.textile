@@ -5,7 +5,7 @@ Lua OOP classes usually end being:
 * multi-file libraries, too difficult to understand
 * very small libraries, not very powerful
 
-Middleclass attemps to be a mid-sized library (~120 lines of code, on a single file), with clean, easy to understand code, and yet powerful enough to be used in most cases.
+Middleclass attemps to be a mid-sized library (~130 lines of code, on a single file), with clean, easy to understand code, and yet powerful enough to be used in most cases.
 
 h1. Documentation
 
@@ -13,12 +13,13 @@ See the "github wiki page":https://github.com/kikito/middleclass/wiki for exampl
 
 h1. Features
 
-  * ~120 lines of code
+  * ~130 lines of code
   * top-level Object class
   * all methods are virtual
   * instance.class returns the instance's class
   * @Class.name@ returns the class name (a string)
-  * @Class.superclass@ returns its super class
+  * @Class.super@ returns its super class
+  * Class methods can be defined with Class.static.methodname
   * Subclassing:
   ** @class(name)@ creates a subclass of @Object@
   ** @class(name, Superclass)@ creates a subclass of the class @SuperClass@
@@ -41,48 +42,14 @@ Features left out:
 
   * metaclasses
   * classes are not Objects (instances are)
-  * simulating a 'super' keyword (for performance concerns)
   
-h1. Installation using git (recommended)
+h1. Installation
 
-The easiest way is creating a clone using git:
-
-<pre>git clone git://github.com/kikito/middleclass.git</pre>
-
-This will create a folder called @middleclass@. You can require it using:
-
-<pre>require 'middleclass.init'</pre>
-
-If you have @?/init.lua@ included in your @package.path@ variable, you can remove the @.init@ part.
-
-If you ever want to update middleclass, you can use the following commands:
-
-<pre>cd your/path/to/middleclass
-git pull origin master</pre>
-
-Git will automatically update middleclass for you.
-
-h1. Manual download
-
-Middleclass can be directly downloaded using "the github downloader":https://github.com/kikito/middleclass/archives/master
-
-You will not be able to get automatic updates with that method, but your folder size will be smaller.
-
-As an alternative, you can directly download "middleclass.lua":https://github.com/kikito/middleclass/raw/master/middleclass.lua and "BSD-LICENSE.txt":https://github.com/kikito/middleclass/raw/master/BSD-LICENSE.txt and put them in your project.
-
-In that case, you will have to require it doing something like this (will vary if you put middleclass.lua inside a folder):
+Just copy the middleclass.lua file wherever you want it (for example on a lib/ folder). Then write this in any Lua file where you want to use it:
 
 <pre>require 'middleclass'</pre>
 
-(This assumes you have @?.lua@ in your @package.path@, which is the default)
-
-You will have to put BSD-LICENSE.txt somewhere in your folder, or copy-paste it inside of your own license.txt file.
-  
-h1. middleclass-extras
-
-This library has a companion lib that adds a lot of interesting functionality to your objects. Give it a look at "middleclass-extras":https://github.com/kikito/middleclass-extras
-
-If you are looking for @MindState@ (now called @Stateful@), it's over there, too.
+Make sure that you read the license, too. In order to comply with it you will have to include its full text inside your program's documentation, or else make it visible in the app's credits.
 
 h1. Specs
 

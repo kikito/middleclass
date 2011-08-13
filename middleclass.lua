@@ -108,19 +108,6 @@ function Object:initialize() end
 
 function Object:__tostring() return "instance of " .. tostring(self.class) end
 
-
---[[
-
--- creates a subclass
-function Object.subclass(klass, name)
-
-  klass:subclassed(thesubclass)   -- hook method. By default it does nothing
-
-  return thesubclass
-end
-]]
-
-
 function class(name, super, ...)
   super = super or Object
   return super:subclass(name, ...)
