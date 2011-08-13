@@ -2,6 +2,7 @@ require 'middleclass'
 
 context('Object', function()
 
+
   context('name', function()
     test('is correctly set', function()
       assert_equal(Object.name, 'Object')
@@ -29,7 +30,11 @@ context('Object', function()
 
     context('when given a class name', function()
 
-      local SubClass = Object:subclass('SubClass')
+      local SubClass
+
+      before(function()
+        SubClass = Object:subclass('SubClass')
+      end)
 
       test('it returns a class with the correct name', function()
         assert_equal(SubClass.name, 'SubClass')
@@ -51,70 +56,64 @@ context('Object', function()
   context('instance creation', function()
 
     local SubClass
-    local classes = { Object, SubClass }
 
     before(function()
-      SubClass = Object:subclass('SubClass')
+      SubClass = class('SubClass')
       function SubClass:initialize() self.mark=true end
     end)
 
-    for _,theClass in ipairs(classes) do
-      context(theClass.name, function()
+   context('allocate', function()
 
-        context('allocate', function()
+      test('allocates instances properly', function()
+        local instance = SubClass:allocate()
+        assert_equal(instance.class, SubClass)
+        assert_equal(tostring(instance), "instance of " .. tostring(SubClass))
+      end)
 
-          test('allocates instances properly', function()
-            local instance = theClass:allocate()
-            assert_equal(instance.class, theClass)
-            assert_equal(tostring(instance), "instance of " .. tostring(theClass))
-          end)
+      test('throws an error when used without the :', function()
+        assert_error(Object.allocate)
+      end)
 
-          test('throws an error when used without the :', function()
-            assert_error(Object.allocate)
-          end)
+      test('does not call the initializer', function()
+        local allocated = SubClass:allocate()
+        assert_nil(allocated.mark)
+      end)
 
-          test('does not call the initializer', function()
-            local allocated = theClass:allocate()
-            assert_nil(allocated.mark)
-          end)
+      test('can be overriden', function()
 
-          test('can be overriden', function()
+        local previousAllocate = SubClass.static.allocate
 
-            local previousAllocate = theClass.allocate
+        function SubClass.static:allocate()
+          local instance = previousAllocate(SubClass)
+          instance.mark = true
+          return instance
+        end
 
-            function theClass.static:allocate()
-              local instance = previousAllocate(theClass)
-              instance.mark = true
-              return instance
-            end
-
-            local allocated = theClass:allocate()
-            assert_true(allocated.mark)
-          end)
-
-        end)
-
-        context('new', function()
-
-          test('initializes instances properly', function()
-            local instance = theClass:new()
-            assert_equal(instance.class, theClass)
-          end)
-
-          test('throws an error when used without the :', function()
-            assert_error(theClass.new)
-          end)
-
-          test('calls the initializer', function()
-            local allocated = theClass:new()
-            assert_true(allocated.mark)
-          end)
-
-        end)
+        local allocated = SubClass:allocate()
+        assert_true(allocated.mark)
 
       end)
 
-    end
+    end)
+
+    context('new', function()
+
+      test('initializes instances properly', function()
+        local instance = SubClass:new()
+        assert_equal(instance.class, SubClass)
+      end)
+
+      test('throws an error when used without the :', function()
+        assert_error(SubClass.new)
+      end)
+
+      test('calls the initializer', function()
+        local initialized = SubClass:new()
+        assert_true(initialized.mark)
+      end)
+
+    end)
+
 
   end)
 

@@ -9,7 +9,11 @@ context('class()', function()
   end)
 
   context('when given a name', function()
-    local TheClass = class('TheClass')
+    local TheClass
+
+    before(function()
+      TheClass = class('TheClass')
+    end)
 
     test('the resulting class has the correct name', function()
       assert_equal(TheClass.name, 'TheClass')

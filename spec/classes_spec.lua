@@ -2,26 +2,33 @@ require 'middleclass'
 
 context('A Class', function()
 
-  context('name', function()
-    test('is correctly set', function()
-      local TheClass = class('TheClass')
-      assert_equal(TheClass.name, 'TheClass')
-    end)
-  end)
+  context('Default stuff', function()
 
-  context('tostring', function()
-    test('returns "class *name*"', function()
-      local TheClass = class('TheClass')
-      assert_equal(tostring(TheClass), 'class TheClass')
-    end)
-  end)
+    local AClass
 
-  context('()', function()
-    test('returns an object, like Class:new()', function()
-      local TheClass = class('TheClass')
-      local obj = TheClass()
-      assert_true(instanceOf(TheClass, obj))
+    before(function()
+      AClass = class('AClass')
     end)
+
+    context('name', function()
+      test('is correctly set', function()
+        assert_equal(AClass.name, 'AClass')
+      end)
+    end)
+
+    context('tostring', function()
+      test('returns "class *name*"', function()
+        assert_equal(tostring(AClass), 'class AClass')
+      end)
+    end)
+
+    context('()', function()
+      test('returns an object, like Class:new()', function()       
+        local obj = AClass()
+        assert_equal(obj.class, AClass)
+      end)
+    end)
+
   end)
 
   context('attributes', function()

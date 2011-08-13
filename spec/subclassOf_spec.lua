@@ -1,3 +1,5 @@
+require 'middleclass'
+
 context('subclassOf', function()
 
   context('nils, integers, etc', function()

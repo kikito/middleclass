@@ -13,8 +13,9 @@ local function _setClassDictionariesMetatables(klass)
   dict.__index = dict
 
   if super then
+    local superStatic = super.static
     setmetatable(dict, super.__instanceDict)
-    setmetatable(klass.static, { __index = function(_,k) return dict[k] or super[k] end })
+    setmetatable(klass.static, { __index = function(_,k) return dict[k] or superStatic[k] end })
   else
     setmetatable(klass.static, { __index = function(_,k) return dict[k] end })
   end
@@ -25,7 +26,7 @@ local function _setClassMetatable(klass)
     __tostring = function() return "class " .. klass.name end,
     __index    = klass.static,
     __newindex = klass.__instanceDict,
-    __call     = function(_, ...) return klass:new(...) end
+    __call     = function(self, ...) return self:new(...) end
   })
 end
 
@@ -53,9 +54,9 @@ local function _setClassMetamethods(klass)
   end
 end
 
-local function _setDefaultInitializeMethod(klass)
+local function _setDefaultInitializeMethod(klass, super)
   klass.initialize = function(instance, ...)
-    return klass.superclass.initialize(instance, ...)
+    return super.initialize(instance, ...)
   end
 end
 
@@ -81,7 +82,7 @@ function Object.static:subclass(name)
 
   local subclass = _createClass(name, self)
   _setClassMetamethods(subclass)
-  _setDefaultInitializeMethod(subclass)
+  _setDefaultInitializeMethod(subclass, self)
 
   return subclass
 end

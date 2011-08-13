@@ -86,5 +86,9 @@ If you are looking for @MindState@ (now called @Stateful@), it's over there, too
 
 h1. Specs
 
-You may find the specs for this library in "middleclass-specs":https://github.com/kikito/middleclass-specs
+This project uses "telescope":https://github.com/norman/telescope for its specs. If you want to run the specs, you will have to install telescope first. Then just execute the following from the root inspect folder:
+
+<pre>
+tsc -f spec/*
+</pre>
 
