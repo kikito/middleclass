@@ -28,6 +28,10 @@ context('Object', function()
       assert_error(function() Object.subclass() end)
     end)
 
+    test('throws an error when no name is given', function()
+      assert_error( function() Object:subclass() end)
+    end)
+
     context('when given a class name', function()
 
       local SubClass
@@ -43,12 +47,7 @@ context('Object', function()
       test('it returns a class with the correct superclass', function()
         assert_equal(SubClass.super, Object)
       end)
-    end)
 
-    context('when no name is given', function()
-      test('it throws an error', function()
-        assert_error( function() Object:subclass() end)
-      end)
     end)
 
   end)

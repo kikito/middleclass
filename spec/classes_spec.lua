@@ -38,7 +38,44 @@ context('A Class', function()
       end)
     end)
 
+    context('subclass', function()
+
+      test('throws an error when used without the :', function()
+        assert_error(function() AClass.subclass() end)
+      end)
+
+      test('throws an error when no name is given', function()
+        assert_error( function() AClass:subclass() end)
+      end)
+
+      context('when given a subclass name', function()
+
+        local SubClass
+
+        before(function()
+          function AClass.static:subclassed(other) self.static.child = other end
+          SubClass = AClass:subclass('SubClass')
+        end)
+
+        test('it returns a class with the correct name', function()
+          assert_equal(SubClass.name, 'SubClass')
+        end)
+
+        test('it returns a class with the correct superclass', function()
+          assert_equal(SubClass.super, AClass)
+        end)
+
+        test('it invokes the subclassed hook method', function()
+          assert_equal(SubClass, AClass.child)
+        end)
+
+      end)
+
+    end)
+
   end)
+
+
 
   context('attributes', function()
 

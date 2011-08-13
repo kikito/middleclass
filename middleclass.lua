@@ -83,9 +83,12 @@ function Object.static:subclass(name)
   local subclass = _createClass(name, self)
   _setClassMetamethods(subclass)
   _setDefaultInitializeMethod(subclass, self)
+  self:subclassed(subclass)
 
   return subclass
 end
+
+function Object.static:subclassed(other) end
 
 function Object.static:include(mixin, ... )
   assert(_classes[self], "Make sure you that you are using 'Class:include' instead of 'Class.include'")
