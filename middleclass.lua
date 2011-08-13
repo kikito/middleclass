@@ -87,9 +87,24 @@ function Object.static:subclass(name)
   return subclass
 end
 
+function Object.static:include(mixin, ... )
+  assert(_classes[self], "Make sure you that you are using 'Class:include' instead of 'Class.include'")
+  assert(type(mixin)=='table', "mixin must be a table")
+
+  for methodName,method in pairs(mixin) do
+    if methodName ~="included" then self[methodName] = method end
+  end
+
+  if type(mixin.included)=="function" then mixin:included(self, ... ) end
+  self.__mixins[mixin] = true
+
+  return self
+end
+
 function Object:initialize() end
 
 function Object:__tostring() return "instance of " .. tostring(self.class) end
+
 
 --[[
 
@@ -100,28 +115,8 @@ function Object.subclass(klass, name)
 
   return thesubclass
 end
-
--- Mixin extension function - simulates very basically ruby's include. Receives a table table, probably with functions.
--- Its contents are copied to klass, with one exception: the included() method will be called instead of copied
-function Object.include(klass, mixin, ... )
-  assert(_classes[klass], "Use class:include instead of class.include")
-  assert(type(mixin)=='table', "mixin must be a table")
-  for methodName,method in pairs(mixin) do
-    if methodName ~="included" then klass[methodName] = method end
-  end
-  if type(mixin.included)=="function" then mixin:included(klass, ... ) end
-  klass.__mixins[mixin] = mixin
-  return klass
-end
-
--- Returns true if the mixin has already been included on a class (or a super)
-function includes(mixin, aClass)
-  if not _classes[aClass] then return false end
-  if aClass.__mixins[mixin]==mixin then return true end
-  return includes(mixin, aClass.super)
-end
-
 ]]
+
 
 function class(name, super, ...)
   super = super or Object
@@ -135,8 +130,14 @@ function instanceOf(aClass, obj)
 end
 
 function subclassOf(other, aClass)
-  if not _classes[aClass] or not _classes[other] or  aClass.super == nil then return false end
+  if not _classes[aClass] or not _classes[other] or aClass.super == nil then return false end
   return aClass.super == other or subclassOf(other, aClass.super)
+end
+
+function includes(mixin, aClass)
+  if not _classes[aClass] then return false end
+  if aClass.__mixins[mixin] then return true end
+  return includes(mixin, aClass.super)
 end
 
 

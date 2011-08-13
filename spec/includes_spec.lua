@@ -1,10 +1,8 @@
---[[
-
 require 'middleclass'
 
 context('includes', function()
 
-  context('Primitives', function()
+  context('nils, numbers, etc', function()
     local o = Object:new()
     local primitives = {nil, 1, 'hello', {}, function() end}
     
@@ -16,7 +14,7 @@ context('includes', function()
         local f2 = function() return includes(primitive, o) end
         local f3 = function() return includes(primitive, primitive) end
         
-        context('does not throw errors', function()
+        context('don\'t throw errors', function()
           test('includes(Object, '.. theType ..')', function()
             assert_not_error(f1)
           end)
@@ -28,7 +26,7 @@ context('includes', function()
           end)
         end)
         
-        test('should make includes return false', function()
+        test('make includes return false', function()
           assert_false(f1())
           assert_false(f2())
           assert_false(f3())
@@ -66,4 +64,3 @@ context('includes', function()
 
 end)
 
-]]

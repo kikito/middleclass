@@ -29,6 +29,15 @@ context('A Class', function()
       end)
     end)
 
+    context('include', function()
+      test('throws an error when used without the :', function()
+        assert_error(function() AClass.include() end)
+      end)
+      test('throws an error when passed a non-table:', function()
+        assert_error(function() AClass:include(1) end)
+      end)
+    end)
+
   end)
 
   context('attributes', function()
