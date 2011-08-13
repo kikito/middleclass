@@ -8,7 +8,7 @@ local _classes = setmetatable({}, {__mode = "k"})
 
 local function _setClassDictionariesMetatables(klass)
   local dict = klass.__instanceDict
-  local super = klass.superclass
+  local super = klass.super
 
   dict.__index = dict
 
@@ -31,7 +31,7 @@ local function _setClassMetatable(klass)
 end
 
 local function _createClass(name, super)
-  local klass = { name = name, superclass = super, static = {}, __mixins = {}, __instanceDict={} }
+  local klass = { name = name, super = super, static = {}, __mixins = {}, __instanceDict={} }
 
   _setClassDictionariesMetatables(klass)
   _setClassMetatable(klass)
@@ -42,7 +42,7 @@ end
 
 local function _createLookupMetamethod(klass, methodName)
   return function(...)
-    local method = klass.superclass[methodName]
+    local method = klass.super[methodName]
     assert( type(method)=='function', tostring(klass) .. " doesn't implement metamethod '" .. methodName .. "'" )
     return method(...)
   end
@@ -135,8 +135,8 @@ function instanceOf(aClass, obj)
 end
 
 function subclassOf(other, aClass)
-  if not _classes[aClass] or not _classes[other] or  aClass.superclass == nil then return false end
-  return aClass.superclass == other or subclassOf(other, aClass.superclass)
+  if not _classes[aClass] or not _classes[other] or  aClass.super == nil then return false end
+  return aClass.super == other or subclassOf(other, aClass.super)
 end
 
 

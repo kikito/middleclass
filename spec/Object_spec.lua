@@ -41,7 +41,7 @@ context('Object', function()
       end)
 
       test('it returns a class with the correct superclass', function()
-        assert_equal(SubClass.superclass, Object)
+        assert_equal(SubClass.super, Object)
       end)
     end)
 

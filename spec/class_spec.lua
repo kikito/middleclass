@@ -20,7 +20,7 @@ context('class()', function()
     end)
 
     test('the resulting class has Object as its superclass', function()
-      assert_equal(TheClass.superclass, Object)
+      assert_equal(TheClass.super, Object)
     end)
   end)
 
@@ -33,7 +33,7 @@ context('class()', function()
     end)
 
     test('the resulting class has the correct superclass', function()
-     assert_equal(TheSubClass.superclass, TheSuperClass)
+     assert_equal(TheSubClass.super, TheSuperClass)
     end)
   end)
 
