@@ -31,6 +31,7 @@ end
 
 local function _createClass(name, super)
   local klass = { name = name, super = super, static = {}, __mixins = {}, __instanceDict={} }
+  klass.subclasses = setmetatable({}, {__mode = "k"})
 
   _setClassDictionariesMetatables(klass)
   _setClassMetatable(klass)
@@ -91,6 +92,7 @@ function Object.static:subclass(name)
   local subclass = _createClass(name, self)
   _setClassMetamethods(subclass)
   _setDefaultInitializeMethod(subclass, self)
+  self.subclasses[subclass] = true
   self:subclassed(subclass)
 
   return subclass

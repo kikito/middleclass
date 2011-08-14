@@ -48,6 +48,10 @@ context('Object', function()
         assert_equal(SubClass.super, Object)
       end)
 
+      test('it includes the subclass in the list of subclasses', function()
+        assert_true(Object.subclasses[SubClass])
+      end)
+
     end)
 
   end)
