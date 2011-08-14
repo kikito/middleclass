@@ -2,16 +2,18 @@ require 'middleclass'
 
 context('A Mixin', function()
 
-  local Mixin, Class1, Class2
+  local Mixin1, Mixin2, Class1, Class2
 
   before(function()
-    Mixin = {}
-    function Mixin:included(theClass) theClass.includesMixin = true end
-    function Mixin:foo() return 'foo' end
-    function Mixin:bar() return 'bar' end
-    function Mixin:baz() return 'baz' end
+    Mixin1, Mixin2 = {},{}
 
-    Class1 = class('Class1'):include(Mixin)
+    function Mixin1:included(theClass) theClass.includesMixin1 = true end
+    function Mixin1:foo() return 'foo' end
+    function Mixin1:bar() return 'bar' end
+
+    function Mixin2:baz() return 'baz' end
+
+    Class1 = class('Class1'):include(Mixin1, Mixin2)
     function Class1:foo() return 'foo1' end
 
     Class2 = class('Class2', Class1)
@@ -19,11 +21,11 @@ context('A Mixin', function()
   end)
 
   test('invokes the "included" method when included', function()
-    assert_true(Class1.includesMixin)
+    assert_true(Class1.includesMixin1)
   end)
   
   test('has all its functions (except "included") copied to its target class', function()
-    assert_equal(Class1:baz(), 'baz')
+    assert_equal(Class1:bar(), 'bar')
     assert_equal(Class1.included, nil)
   end)
   

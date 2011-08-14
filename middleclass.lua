@@ -8,10 +8,9 @@ local _classes = setmetatable({}, {__mode = "k"})
 
 local function _setClassDictionariesMetatables(klass)
   local dict = klass.__instanceDict
-  local super = klass.super
-
   dict.__index = dict
 
+  local super = klass.super
   if super then
     local superStatic = super.static
     setmetatable(dict, super.__instanceDict)
@@ -40,10 +39,10 @@ local function _createClass(name, super)
   return klass
 end
 
-local function _createLookupMetamethod(klass, methodName)
+local function _createLookupMetamethod(klass, name)
   return function(...)
-    local method = klass.super[methodName]
-    assert( type(method)=='function', tostring(klass) .. " doesn't implement metamethod '" .. methodName .. "'" )
+    local method = klass.super[name]
+    assert( type(method)=='function', tostring(klass) .. " doesn't implement metamethod '" .. name .. "'" )
     return method(...)
   end
 end
@@ -58,6 +57,15 @@ local function _setDefaultInitializeMethod(klass, super)
   klass.initialize = function(instance, ...)
     return super.initialize(instance, ...)
   end
+end
+
+local function _includeMixin(klass, mixin)
+  assert(type(mixin)=='table', "mixin must be a table")
+  for name,method in pairs(mixin) do
+    if name ~="included" then klass[name] = method end
+  end
+  if type(mixin.included)=="function" then mixin:included(klass) end
+  klass.__mixins[mixin] = true
 end
 
 Object = _createClass("Object", nil)
@@ -90,17 +98,9 @@ end
 
 function Object.static:subclassed(other) end
 
-function Object.static:include(mixin, ... )
+function Object.static:include( ... )
   assert(_classes[self], "Make sure you that you are using 'Class:include' instead of 'Class.include'")
-  assert(type(mixin)=='table', "mixin must be a table")
-
-  for methodName,method in pairs(mixin) do
-    if methodName ~="included" then self[methodName] = method end
-  end
-
-  if type(mixin.included)=="function" then mixin:included(self, ... ) end
-  self.__mixins[mixin] = true
-
+  for _,mixin in ipairs({...}) do _includeMixin(self, mixin) end
   return self
 end
 
