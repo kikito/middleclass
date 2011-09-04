@@ -1,5 +1,7 @@
 require 'middleclass'
 
+local inspect = require 'inspect'
+
 context('Metamethods', function()
 
   context('Custom Metamethods', function()
@@ -54,6 +56,7 @@ context('Metamethods', function()
       function Vector2:initialize(x,y,z) Vector.initialize(self,x,y,z) end
       
       local c = Vector2:new(1,2,3)
+      print(inspect(c))
       local d = Vector2:new(2,4,6)
       for metamethod,values in pairs({
         __tostring = { tostring(c), "Vector2[1,2,3]" },

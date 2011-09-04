@@ -13,10 +13,17 @@ local function _setClassDictionariesMetatables(klass)
   local super = klass.super
   if super then
     local superStatic = super.static
-    setmetatable(dict, super.__instanceDict)
+    setmetatable(dict, klass.__inherited)
     setmetatable(klass.static, { __index = function(_,k) return dict[k] or superStatic[k] end })
   else
     setmetatable(klass.static, { __index = function(_,k) return dict[k] end })
+  end
+end
+
+local function _addInstanceMethodToClass(klass, name, method)
+  klass.__instanceDict[name] = method
+  for subclass, _ in pairs(klass.subclasses) do
+    subclass.__inherited[name] = method
   end
 end
 
@@ -24,40 +31,29 @@ local function _setClassMetatable(klass)
   setmetatable(klass, {
     __tostring = function() return "class " .. klass.name end,
     __index    = klass.static,
-    __newindex = klass.__instanceDict,
+    __newindex = _addInstanceMethodToClass,
     __call     = function(self, ...) return self:new(...) end
   })
 end
 
+local function _copyInheritedMethods(klass, super)
+  for name, method in pairs(super.__instanceDict) do
+    if klass.metamethods[method] then klass.__instanceDict[name] = method
+    else klass.__inherited[name] = method end
+  end
+end
+
 local function _createClass(name, super)
-  local klass = { name = name, super = super, static = {}, __mixins = {}, __instanceDict={} }
-  klass.subclasses = setmetatable({}, {__mode = "k"})
+  local klass = {
+    name = name, super = super, static = {}, subclasses = setmetatable({}, {__mode = "k"}),
+    __mixins = {}, __instanceDict={}, __inherited ={}
+  }
 
   _setClassDictionariesMetatables(klass)
   _setClassMetatable(klass)
   _classes[klass] = true
 
   return klass
-end
-
-local function _createLookupMetamethod(klass, name)
-  return function(...)
-    local method = klass.super[name]
-    assert( type(method)=='function', tostring(klass) .. " doesn't implement metamethod '" .. name .. "'" )
-    return method(...)
-  end
-end
-
-local function _setClassMetamethods(klass)
-  for _,m in ipairs(klass.__metamethods) do
-    klass[m]= _createLookupMetamethod(klass, m)
-  end
-end
-
-local function _setDefaultInitializeMethod(klass, super)
-  klass.initialize = function(instance, ...)
-    return super.initialize(instance, ...)
-  end
 end
 
 local function _includeMixin(klass, mixin)
@@ -71,8 +67,14 @@ end
 
 Object = _createClass("Object", nil)
 
-Object.static.__metamethods = { '__add', '__call', '__concat', '__div', '__le', '__lt', 
-                                '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm' }
+Object.static.metamethods = { __add=1, __call=1, __concat=1, __div=1, __le=1, __lt=1,
+                              __mod=1, __mul=1, __pow=1, __sub=1, __tostring=1, __unm=1 }
+
+for name,_ in pairs(Object.metamethods) do
+  Object[name] = function(self) error(name .. ' not defined in ' .. tostring(self)) end
+end
+
+function Object:__tostring() return "instance of " .. tostring(self.class) end
 
 function Object.static:allocate()
   assert(_classes[self], "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
@@ -90,8 +92,7 @@ function Object.static:subclass(name)
   assert(type(name) == "string", "You must provide a name(string) for your class")
 
   local subclass = _createClass(name, self)
-  _setClassMetamethods(subclass)
-  _setDefaultInitializeMethod(subclass, self)
+  _copyInheritedMethods(subclass, self)
   self.subclasses[subclass] = true
   self:subclassed(subclass)
 
@@ -107,8 +108,6 @@ function Object.static:include( ... )
 end
 
 function Object:initialize() end
-
-function Object:__tostring() return "instance of " .. tostring(self.class) end
 
 function class(name, super, ...)
   super = super or Object
