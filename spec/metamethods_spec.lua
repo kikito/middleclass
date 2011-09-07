@@ -1,7 +1,5 @@
 require 'middleclass'
 
-local inspect = require 'inspect'
-
 context('Metamethods', function()
 
   context('Custom Metamethods', function()
@@ -10,6 +8,7 @@ context('Metamethods', function()
     -- I'll be using 'a' instead of 'self' on this example since it is shorter
     local Vector= class('Vector')
     function Vector.initialize(a,x,y,z) a.x, a.y, a.z = x,y,z end
+
     function Vector.__tostring(a) return a.class.name .. '[' .. a.x .. ',' .. a.y .. ',' .. a.z .. ']' end
     function Vector.__eq(a,b)     return a.x==b.x and a.y==b.y and a.z==b.z end
     function Vector.__lt(a,b)     return a() < b() end
@@ -50,13 +49,12 @@ context('Metamethods', function()
         assert_equal(values[1], values[2])
       end)
     end
-    
+
     context('Inherited Metamethods', function()
       local Vector2= class('Vector2', Vector)
       function Vector2:initialize(x,y,z) Vector.initialize(self,x,y,z) end
-      
+
       local c = Vector2:new(1,2,3)
-      print(inspect(c))
       local d = Vector2:new(2,4,6)
       for metamethod,values in pairs({
         __tostring = { tostring(c), "Vector2[1,2,3]" },
@@ -77,7 +75,7 @@ context('Metamethods', function()
         end)
       end
     end)
-    
+
   end)
 
   context('Default Metamethods', function()
@@ -99,8 +97,7 @@ context('Metamethods', function()
     end)
 
     context('An instance', function()
-      test('has a tostring metamethod, returning a different result from Object.__tostring', function()
-        assert_not_equal(Peter.__tostring, Object.__tostring)
+      test('has a tostring metamethod', function()
         assert_equal(tostring(peter), 'instance of class Peter')
       end)
     end)

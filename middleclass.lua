@@ -4,7 +4,7 @@
 -- Based on YaciCode, from Julien Patte and LuaObject, from Sebastien Rocca-Serra
 -----------------------------------------------------------------------------------------------------------------------
 
-local _classes = setmetatable({}, {__mode = "k"})
+local _classes = setmetatable({}, { __mode = "k" })
 
 local function _setClassDictionariesMetatables(klass)
   local dict = klass.__instanceDict
@@ -13,7 +13,6 @@ local function _setClassDictionariesMetatables(klass)
   local super = klass.super
   if super then
     local superStatic = super.static
-    setmetatable(dict, klass.__inherited)
     setmetatable(klass.static, { __index = function(_,k) return dict[k] or superStatic[k] end })
   else
     setmetatable(klass.static, { __index = function(_,k) return dict[k] end })
@@ -23,7 +22,8 @@ end
 local function _addInstanceMethodToClass(klass, name, method)
   klass.__instanceDict[name] = method
   for subclass, _ in pairs(klass.subclasses) do
-    subclass.__inherited[name] = method
+    local existing = subclass.__instanceDict[name]
+    subclass.__instanceDict[name] = existing or method
   end
 end
 
@@ -38,15 +38,15 @@ end
 
 local function _copyInheritedMethods(klass, super)
   for name, method in pairs(super.__instanceDict) do
-    if klass.metamethods[method] then klass.__instanceDict[name] = method
-    else klass.__inherited[name] = method end
+    local existing = klass.__instanceDict[name]
+    klass.__instanceDict[name] = existing or method
   end
 end
 
 local function _createClass(name, super)
   local klass = {
-    name = name, super = super, static = {}, subclasses = setmetatable({}, {__mode = "k"}),
-    __mixins = {}, __instanceDict={}, __inherited ={}
+    name = name, super = super, static = {}, subclasses = setmetatable({}, { __mode = "k" }),
+    __mixins = {}, __instanceDict = {}
   }
 
   _setClassDictionariesMetatables(klass)
