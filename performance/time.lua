@@ -1,9 +1,13 @@
 return function(title, f)
 
-  local start = os.clock()
+  collectgarbage()
+
+  local startTime = os.clock()
 
   for i=0,10000 do f() end
 
-  print( title, os.clock() - start )
+  local endTime = os.clock()
+
+  print( title, endTime - startTime )
 
 end
