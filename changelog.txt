@@ -1,0 +1,7 @@
+Version 2.0
+
+* static methods are now separated from instance methods
+* class.superclass has now become class.super
+* It's now possible to do class.subclasses
+* license is changed from BSD to MIT
+
