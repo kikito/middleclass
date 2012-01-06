@@ -5,7 +5,7 @@ Lua OOP classes usually end being:
 * multi-file libraries, too difficult to understand
 * very small libraries, not very powerful
 
-Middleclass attemps to be a mid-sized library (~130 lines of code, on a single file), with clean, easy to understand code, and yet powerful enough to be used in most cases.
+Middleclass attemps to be a mid-sized library (~140 lines of code, on a single file), with clean, easy to understand code, and yet powerful enough to be used in most cases.
 
 h1. Documentation
 
