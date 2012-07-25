@@ -46,7 +46,13 @@ Features left out:
 
 h1. Installation
 
-Just copy the middleclass.lua file wherever you want it (for example on a lib/ folder). Then write this in any Lua file where you want to use it:
+With luarocks
+
+<pre>
+$ sudo luarocks make middleclass*.rockspec
+</pre>
+
+Manually, just copy the middleclass.lua file wherever you want it (for example on a lib/ folder). Then write this in any Lua file where you want to use it:
 
 <pre>require 'middleclass'</pre>
 
