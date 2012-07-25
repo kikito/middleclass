@@ -104,7 +104,13 @@ function Object.static:subclass(name, spec)
   self:subclassed(subclass)
 
   for k, v in pairs(spec) do
-    subclass[k] = v
+    if k == "static" then
+      for k1, v1 in pairs(v) do
+        subclass.static[k1] = v1
+      end
+    else
+      subclass[k] = v
+    end
   end
 
   return subclass

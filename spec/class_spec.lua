@@ -40,6 +40,12 @@ context('class()', function()
   context('when given a name and a spec', function()
     test('the resulting class has member', function()
       local TheClass = class('TheClass', {
+        static = {
+          create = function(self)
+            return "create"
+          end
+        },
+
         getName = function(self)
           return 'the_class'
         end
@@ -47,6 +53,7 @@ context('class()', function()
 
       the_class = TheClass:new()
       assert_equal(the_class:getName(), 'the_class')
+      assert_equal(TheClass:create(), "create")
     end)
   end)
 
