@@ -1,12 +1,12 @@
 package = "middleclass"
 version = "2.0-0"
 source = {
-   url = "url",
+   url = "https://github.com/kikito/middleclass/tarball/master",
 }
 description = {
-   summary = "Tools to make your life as a Lua developer more pleasant",
-   homepage = "http://luaforge.net",
-   license = "MIT/X11"
+   summary = "Object-orientation for Lua",
+   homepage = "https://github.com/kikito/middleclass",
+   license = "MIT-LICENSE"
 }
 dependencies = {
    "lua >= 5.1"
