@@ -1,5 +1,7 @@
 h1. MiddleClass
 
+!https://travis-ci.org/kikito/middleclass.png?branch=master!:https://travis-ci.org/kikito/middleclass
+
 Lua OOP classes usually end being:
 
 * multi-file libraries, too difficult to understand
