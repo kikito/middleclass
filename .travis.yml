@@ -9,4 +9,4 @@ install:
   - sudo apt-get install luarocks
   - sudo luarocks install telescope
 
-script: "tsc -f specs/*"
+script: "tsc -f spec/*"
