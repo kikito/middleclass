@@ -1,4 +1,4 @@
-require 'middleclass'
+local class = require 'middleclass'
 
 context('class()', function()
 
@@ -9,31 +9,19 @@ context('class()', function()
   end)
 
   context('when given a name', function()
-    local TheClass
-
-    before(function()
-      TheClass = class('TheClass')
-    end)
-
-    test('the resulting class has the correct name', function()
+    test('the resulting class has the correct name and Object as its superclass', function()
+      local TheClass = class('TheClass')
       assert_equal(TheClass.name, 'TheClass')
-    end)
-
-    test('the resulting class has Object as its superclass', function()
       assert_equal(TheClass.super, Object)
     end)
   end)
 
   context('when given a name and a superclass', function()
-    local TheSuperClass = class('TheSuperClass')
-    local TheSubClass = class('TheSubClass', TheSuperClass)
-
-    test('the resulting class has the correct name', function()
+    test('the resulting class has the correct name and superclass', function()
+      local TheSuperClass = class('TheSuperClass')
+      local TheSubClass = class('TheSubClass', TheSuperClass)
       assert_equal(TheSubClass.name, 'TheSubClass')
-    end)
-
-    test('the resulting class has the correct superclass', function()
-     assert_equal(TheSubClass.super, TheSuperClass)
+      assert_equal(TheSubClass.super, TheSuperClass)
     end)
   end)
 

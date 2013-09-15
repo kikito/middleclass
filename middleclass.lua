@@ -135,11 +135,6 @@ function Object:initialize() end
 
 function Object:__tostring() return "instance of " .. tostring(self.class) end
 
-function class(name, super, ...)
-  super = super or Object
-  return super:subclass(name, ...)
-end
-
 function instanceOf(aClass, obj)
   if type(aClass) ~= 'table' or type(obj) ~= 'table' or not obj.class then return false end
   if obj.class == aClass then return true end
@@ -156,5 +151,12 @@ function includes(mixin, aClass)
   if aClass.__mixins[mixin] then return true end
   return includes(mixin, aClass.super)
 end
+
+function middleclass.class(name, super, ...)
+  super = super or Object
+  return super:subclass(name, ...)
+end
+
+setmetatable(middleclass, { __call = function(_, ...) return middleclass.class(...) end })
 
 return middleclass

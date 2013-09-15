@@ -1,4 +1,4 @@
-require 'middleclass'
+local class = require 'middleclass'
 
 context('A Class', function()
 
@@ -23,7 +23,7 @@ context('A Class', function()
     end)
 
     context('()', function()
-      test('returns an object, like Class:new()', function()       
+      test('returns an object, like Class:new()', function()
         local obj = AClass()
         assert_equal(obj.class, AClass)
       end)
@@ -99,7 +99,7 @@ context('A Class', function()
     test('are available for subclasses', function()
       assert_equal(B.foo, 'foo')
     end)
-    
+
     test('are overridable by subclasses, without affecting the superclasses', function()
       B.static.foo = 'chunky bacon'
       assert_equal(B.foo, 'chunky bacon')
@@ -126,7 +126,7 @@ context('A Class', function()
     test('are available for subclasses', function()
       assert_equal(B:foo(), 'foo')
     end)
-    
+
     test('are overridable by subclasses, without affecting the superclasses', function()
       function B.static:foo() return 'chunky bacon' end
       assert_equal(B:foo(), 'chunky bacon')

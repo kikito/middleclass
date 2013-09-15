@@ -1,4 +1,4 @@
-require 'middleclass'
+local class = require 'middleclass'
 
 context('Metamethods', function()
 
@@ -48,11 +48,11 @@ context('Metamethods', function()
         assert_equal(values[1], values[2])
       end)
     end
-    
+
     context('Inherited Metamethods', function()
       local Vector2= class('Vector2', Vector)
       function Vector2:initialize(x,y,z) Vector.initialize(self,x,y,z) end
-      
+
       local c = Vector2:new(1,2,3)
       local d = Vector2:new(2,4,6)
       for metamethod,values in pairs({
@@ -74,7 +74,7 @@ context('Metamethods', function()
         end)
       end
     end)
-    
+
   end)
 
   context('Default Metamethods', function()

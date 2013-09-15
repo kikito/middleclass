@@ -1,4 +1,4 @@
-require 'middleclass'
+local class = require 'middleclass'
 
 context('A Mixin', function()
 
@@ -26,12 +26,12 @@ context('A Mixin', function()
   test('invokes the "included" method when included', function()
     assert_true(Class1.includesMixin1)
   end)
-  
+
   test('has all its functions (except "included") copied to its target class', function()
     assert_equal(Class1:bar(), 'bar')
     assert_nil(Class1.included)
   end)
-  
+
   test('makes its functions available to subclasses', function()
     assert_equal(Class2:baz(), 'baz')
   end)
@@ -39,7 +39,7 @@ context('A Mixin', function()
   test('allows overriding of methods in the same class', function()
     assert_equal(Class2:foo(), 'foo1')
   end)
-  
+
   test('allows overriding of methods on subclasses', function()
     assert_equal(Class2:bar2(), 'bar2')
   end)
