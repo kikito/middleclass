@@ -27,8 +27,6 @@ local middleclass = {
   ]]
 }
 
-local _classes = setmetatable({}, {__mode = "k"})
-
 local function _setClassDictionariesMetatables(klass)
   local dict = klass.__instanceDict
   dict.__index = dict
@@ -58,7 +56,6 @@ local function _createClass(name, super)
 
   _setClassDictionariesMetatables(klass)
   _setClassMetatable(klass)
-  _classes[klass] = true
 
   return klass
 end
@@ -103,7 +100,7 @@ Object.static.__metamethods = { '__add', '__call', '__concat', '__div', '__le', 
                                 '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm' }
 
 function Object.static:allocate()
-  assert(_classes[self], "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
+  assert(self, "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
   return setmetatable({ class = self }, self.__instanceDict)
 end
 
@@ -114,7 +111,7 @@ function Object.static:new(...)
 end
 
 function Object.static:subclass(name)
-  assert(_classes[self], "Make sure that you are using 'Class:subclass' instead of 'Class.subclass'")
+  assert(self, "Make sure that you are using 'Class:subclass' instead of 'Class.subclass'")
   assert(type(name) == "string", "You must provide a name(string) for your class")
 
   local subclass = _createClass(name, self)
@@ -129,7 +126,7 @@ end
 function Object.static:subclassed(other) end
 
 function Object.static:include( ... )
-  assert(_classes[self], "Make sure you that you are using 'Class:include' instead of 'Class.include'")
+  assert(self, "Make sure you that you are using 'Class:include' instead of 'Class.include'")
   for _,mixin in ipairs({...}) do _includeMixin(self, mixin) end
   return self
 end
@@ -144,18 +141,18 @@ function class(name, super, ...)
 end
 
 function instanceOf(aClass, obj)
-  if not _classes[aClass] or type(obj) ~= 'table' or not _classes[obj.class] then return false end
+  if type(aClass) ~= 'table' or type(obj) ~= 'table' or not obj.class then return false end
   if obj.class == aClass then return true end
   return subclassOf(aClass, obj.class)
 end
 
 function subclassOf(other, aClass)
-  if not _classes[aClass] or not _classes[other] or aClass.super == nil then return false end
+  if type(other) ~= 'table' or type(aClass) ~= 'table' or not aClass.super then return false end
   return aClass.super == other or subclassOf(other, aClass.super)
 end
 
 function includes(mixin, aClass)
-  if not _classes[aClass] then return false end
+  if type(mixin) ~= 'table' or type(aClass) ~= 'table' or not aClass.__mixins then return false end
   if aClass.__mixins[mixin] then return true end
   return includes(mixin, aClass.super)
 end
