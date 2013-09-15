@@ -94,7 +94,7 @@ local function _includeMixin(klass, mixin)
   klass.__mixins[mixin] = true
 end
 
-Object = _createClass("Object", nil)
+local Object = _createClass("Object", nil)
 
 Object.static.__metamethods = { '__add', '__call', '__concat', '__div', '__le', '__lt',
                                 '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm' }
@@ -156,6 +156,8 @@ function middleclass.class(name, super, ...)
   super = super or Object
   return super:subclass(name, ...)
 end
+
+middleclass.Object = Object
 
 setmetatable(middleclass, { __call = function(_, ...) return middleclass.class(...) end })
 

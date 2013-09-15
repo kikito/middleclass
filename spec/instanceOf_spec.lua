@@ -1,4 +1,5 @@
 local class = require 'middleclass'
+local Object = class.Object
 
 context('instanceOf', function()
 
