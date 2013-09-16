@@ -11,9 +11,10 @@ context('includes', function()
       local theType = type(primitive)
       context('A ' .. theType, function()
 
-        local f1 = function() return includes(Object, primitive) end
-        local f2 = function() return includes(primitive, o) end
-        local f3 = function() return includes(primitive, primitive) end
+        local f1 = function() return Object.includes(Object, primitive) end
+        local f2 = function() return Object.includes(primitive, o) end
+        local f3 = function() return Object.includes(primitive, primitive) end
+
 
         context('don\'t throw errors', function()
           test('includes(Object, '.. theType ..')', function()
@@ -49,16 +50,16 @@ context('includes', function()
     Class1:include(hasFoo)
 
     test('returns true if it includes a mixin', function()
-      assert_true(includes(hasFoo, Class1))
+      assert_true(Class1:includes(hasFoo))
     end)
 
     test('returns true if its superclass includes a mixin', function()
-      assert_true(includes(hasFoo, Class2))
-      assert_true(includes(hasFoo, Class3))
+      assert_true(Class2:includes(hasFoo))
+      assert_true(Class3:includes(hasFoo))
     end)
 
     test('returns false otherwise', function()
-      assert_false(includes(hasFoo, UnrelatedClass))
+      assert_false(UnrelatedClass:includes(hasFoo))
     end)
 
   end)

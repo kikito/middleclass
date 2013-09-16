@@ -141,6 +141,17 @@ function Object.static:include( ... )
   return self
 end
 
+function Object.static:includes(mixin)
+  return type(mixin)          == 'table' and
+         type(self)           == 'table' and
+         type(self.__mixins)  == 'table' and
+         ( self.__mixins[mixin] or
+           type(self.super)           == 'table' and
+           type(self.super.includes)  == 'function' and
+           self.super:includes(mixin)
+         )
+end
+
 function Object:initialize() end
 
 function Object:__tostring() return "instance of " .. tostring(self.class) end
@@ -155,11 +166,7 @@ function Object:isInstanceOf(aClass)
          )
 end
 
-function includes(mixin, aClass)
-  if type(mixin) ~= 'table' or type(aClass) ~= 'table' or not aClass.__mixins then return false end
-  if aClass.__mixins[mixin] then return true end
-  return includes(mixin, aClass.super)
-end
+
 
 function middleclass.class(name, super, ...)
   super = super or Object
