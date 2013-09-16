@@ -125,6 +125,15 @@ end
 
 function Object.static:subclassed(other) end
 
+function Object.static:isSubclassOf(other)
+  if type(other)                   ~= 'table' or
+     type(self)                    ~= 'table' or
+     type(self.super)              ~= 'table' or
+     type(self.super.isSubclassOf) ~= 'function' then return false end
+
+  return self.super == other or self.super:isSubclassOf(other)
+end
+
 function Object.static:include( ... )
   assert(self, "Make sure you that you are using 'Class:include' instead of 'Class.include'")
   for _,mixin in ipairs({...}) do _includeMixin(self, mixin) end
@@ -135,15 +144,13 @@ function Object:initialize() end
 
 function Object:__tostring() return "instance of " .. tostring(self.class) end
 
-function instanceOf(aClass, obj)
-  if type(aClass) ~= 'table' or type(obj) ~= 'table' or not obj.class then return false end
-  if obj.class == aClass then return true end
-  return subclassOf(aClass, obj.class)
-end
+function Object:isInstanceOf(aClass)
+  if type(self)                ~= 'table' or
+     type(self.class)          ~= 'table' or
+     type(aClass)              ~= 'table' or
+     type(aClass.isSubclassOf) ~= 'function' then return false end
 
-function subclassOf(other, aClass)
-  if type(other) ~= 'table' or type(aClass) ~= 'table' or not aClass.super then return false end
-  return aClass.super == other or subclassOf(other, aClass.super)
+  return aClass == self.class or aClass:isSubclassOf(self.class)
 end
 
 function includes(mixin, aClass)

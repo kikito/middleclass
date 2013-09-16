@@ -1,7 +1,7 @@
 local class = require 'middleclass'
 local Object = class.Object
 
-context('instanceOf', function()
+context('Object.isInstanceOf', function()
 
   context('nils, integers, strings, tables, and functions', function()
     local o = Object:new()
@@ -11,9 +11,9 @@ context('instanceOf', function()
       local theType = type(primitive)
       context('A ' .. theType, function()
 
-        local f1 = function() return instanceOf(Object, primitive) end
-        local f2 = function() return instanceOf(primitive, o) end
-        local f3 = function() return instanceOf(primitive, primitive) end
+        local f1 = function() return Object.isInstanceOf(primitive, Object) end
+        local f2 = function() return Object.isInstanceOf(primitive, o) end
+        local f3 = function() return Object.isInstanceOf(primitive, primitive) end
 
         context('does not throw errors', function()
           test('instanceOf(Object, '.. theType ..')', function()
@@ -46,34 +46,34 @@ context('instanceOf', function()
 
     local o1, o2, o3 = Class1:new(), Class2:new(), Class3:new()
 
-    test('is instanceOf(Object)', function()
-      assert_true(instanceOf(Object, o1))
-      assert_true(instanceOf(Object, o2))
-      assert_true(instanceOf(Object, o3))
+    test('isInstanceOf(Object)', function()
+      assert_true(o1:isInstanceOf(Object))
+      assert_true(o2:isInstanceOf(Object))
+      assert_true(o3:isInstanceOf(Object))
     end)
 
-    test('is instanceOf its class', function()
-      assert_true(instanceOf(Class1, o1))
-      assert_true(instanceOf(Class2, o2))
-      assert_true(instanceOf(Class3, o3))
+    test('isInstanceOf its class', function()
+      assert_true(o1:isInstanceOf(Class1))
+      assert_true(o2:isInstanceOf(Class2))
+      assert_true(o3:isInstanceOf(Class3))
     end)
 
     test('is instanceOf its class\' superclasses', function()
-      assert_true(instanceOf(Class1, o2))
-      assert_true(instanceOf(Class1, o3))
-      assert_true(instanceOf(Class2, o3))
+      assert_true(o2:isInstanceOf(Class1))
+      assert_true(o3:isInstanceOf(Class1))
+      assert_true(o3:isInstanceOf(Class2))
     end)
 
     test('is not instanceOf its class\' subclasses', function()
-      assert_false(instanceOf(Class2, o1))
-      assert_false(instanceOf(Class3, o1))
-      assert_false(instanceOf(Class3, o2))
+      assert_false(o1:isInstanceOf(Class2))
+      assert_false(o1:isInstanceOf(Class3))
+      assert_false(o2:isInstanceOf(Class3))
     end)
 
     test('is not instanceOf an unrelated class', function()
-      assert_false(instanceOf(UnrelatedClass, o1))
-      assert_false(instanceOf(UnrelatedClass, o2))
-      assert_false(instanceOf(UnrelatedClass, o3))
+      assert_false(o1:isInstanceOf(UnrelatedClass))
+      assert_false(o2:isInstanceOf(UnrelatedClass))
+      assert_false(o3:isInstanceOf(UnrelatedClass))
     end)
 
   end)
