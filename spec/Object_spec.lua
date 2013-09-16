@@ -19,7 +19,7 @@ context('Object', function()
   context('()', function()
     test('returns an object, like Object:new()', function()
       local obj = Object()
-      assert_true(instanceOf(Object, obj))
+      assert_true(obj:isInstanceOf(Object))
     end)
   end)
 

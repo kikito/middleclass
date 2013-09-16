@@ -89,7 +89,7 @@ context('Metamethods', function()
 
     context('A Class', function()
       test('has a call metamethod properly set', function()
-        assert_true(instanceOf(Peter, peter))
+        assert_true(peter:isInstanceOf(Peter))
       end)
       test('has a tostring metamethod properly set', function()
         assert_equal(tostring(Peter), 'class Peter')
