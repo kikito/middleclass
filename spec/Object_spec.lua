@@ -1,89 +1,89 @@
 local class = require 'middleclass'
 local Object = class.Object
 
-context('Object', function()
+describe('Object', function()
 
 
-  context('name', function()
-    test('is correctly set', function()
-      assert_equal(Object.name, 'Object')
+  describe('name', function()
+    it('is correctly set', function()
+      assert.equal(Object.name, 'Object')
     end)
   end)
 
-  context('tostring', function()
-    test('returns "class Object"', function()
-      assert_equal(tostring(Object), 'class Object')
+  describe('tostring', function()
+    it('returns "class Object"', function()
+      assert.equal(tostring(Object), 'class Object')
     end)
   end)
 
-  context('()', function()
-    test('returns an object, like Object:new()', function()
+  describe('()', function()
+    it('returns an object, like Object:new()', function()
       local obj = Object()
-      assert_true(obj:isInstanceOf(Object))
+      assert.is_true(obj:isInstanceOf(Object))
     end)
   end)
 
-  context('subclass', function()
+  describe('subclass', function()
 
-    test('throws an error when used without the :', function()
-      assert_error(function() Object.subclass() end)
+    it('throws an error when used without the :', function()
+      assert.error(function() Object.subclass() end)
     end)
 
-    test('throws an error when no name is given', function()
-      assert_error( function() Object:subclass() end)
+    it('throws an error when no name is given', function()
+      assert.error( function() Object:subclass() end)
     end)
 
-    context('when given a class name', function()
+    describe('when given a class name', function()
 
       local SubClass
 
-      before(function()
+      before_each(function()
         SubClass = Object:subclass('SubClass')
       end)
 
-      test('it returns a class with the correct name', function()
-        assert_equal(SubClass.name, 'SubClass')
+      it('it returns a class with the correct name', function()
+        assert.equal(SubClass.name, 'SubClass')
       end)
 
-      test('it returns a class with the correct superclass', function()
-        assert_equal(SubClass.super, Object)
+      it('it returns a class with the correct superclass', function()
+        assert.equal(SubClass.super, Object)
       end)
 
-      test('it includes the subclass in the list of subclasses', function()
-        assert_true(Object.subclasses[SubClass])
+      it('it includes the subclass in the list of subclasses', function()
+        assert.is_true(Object.subclasses[SubClass])
       end)
 
     end)
 
   end)
 
-  context('instance creation', function()
+  describe('instance creation', function()
 
     local SubClass
 
-    before(function()
+    before_each(function()
       SubClass = class('SubClass')
       function SubClass:initialize() self.mark=true end
     end)
 
-   context('allocate', function()
+   describe('allocate', function()
 
-      test('allocates instances properly', function()
+      it('allocates instances properly', function()
         local instance = SubClass:allocate()
-        assert_equal(instance.class, SubClass)
-        assert_equal(tostring(instance), "instance of " .. tostring(SubClass))
+        assert.equal(instance.class, SubClass)
+        assert.equal(tostring(instance), "instance of " .. tostring(SubClass))
       end)
 
-      test('throws an error when used without the :', function()
-        assert_error(Object.allocate)
+      it('throws an error when used without the :', function()
+        assert.error(Object.allocate)
       end)
 
-      test('does not call the initializer', function()
+      it('does not call the initializer', function()
         local allocated = SubClass:allocate()
-        assert_nil(allocated.mark)
+        assert.is_nil(allocated.mark)
       end)
 
-      test('can be overriden', function()
+      it('can be overriden', function()
 
         local previousAllocate = SubClass.static.allocate
 
@@ -94,26 +94,26 @@ context('Object', function()
         end
 
         local allocated = SubClass:allocate()
-        assert_true(allocated.mark)
+        assert.is_true(allocated.mark)
 
       end)
 
     end)
 
-    context('new', function()
+    describe('new', function()
 
-      test('initializes instances properly', function()
+      it('initializes instances properly', function()
         local instance = SubClass:new()
-        assert_equal(instance.class, SubClass)
+        assert.equal(instance.class, SubClass)
       end)
 
-      test('throws an error when used without the :', function()
-        assert_error(SubClass.new)
+      it('throws an error when used without the :', function()
+        assert.error(SubClass.new)
       end)
 
-      test('calls the initializer', function()
+      it('calls the initializer', function()
         local initialized = SubClass:new()
-        assert_true(initialized.mark)
+        assert.is_true(initialized.mark)
       end)
 
     end)
