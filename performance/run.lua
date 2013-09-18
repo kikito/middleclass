@@ -1,4 +1,4 @@
-require 'middleclass'
+local class = require 'middleclass'
 
 time = require 'performance/time'
 
