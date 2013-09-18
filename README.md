@@ -5,7 +5,8 @@ middleclass
 
 A simple OOP library for Lua. It has inheritance, metamethods (operators), class variables and weak mixin support.
 
-h1. Quick Look
+Quick Look
+==========
 
     local class = require 'middleclass'
 
@@ -31,30 +32,35 @@ h1. Quick Look
 
     print(lemon:isSweet()) -- false
 
-h1. Documentation
+Documentation
+=============
 
 See the "github wiki page":https://github.com/kikito/middleclass/wiki for examples & documentation.
 
-h1. Installation
+Installation
+============
 
 Just copy the middleclass.lua file wherever you want it (for example on a lib/ folder). Then write this in any Lua file where you want to use it:
 
     local class = require 'middleclass'
 
-h1. Specs
+Specs
+=====
 
 This project uses [busted](http://olivinelabs.com/busted/) for its specs. If you want to run the specs, you will have to install it first. Then just execute the following:
 
     cd /folder/where/the/spec/folder/is
     busted
 
-h1. Performance tests
+Performance tests
+=================
 
 Middleclass also comes with a small performance test suite. Just run the following command:
 
     lua performance/run.lua
 
-h1. Updating from 2.0
+Updating from 2.x
+=================
 
 Middleclass used to expose several global variables on the main scope. It does not do that any more.
 
