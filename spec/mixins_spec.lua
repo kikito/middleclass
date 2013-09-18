@@ -1,10 +1,10 @@
 local class = require 'middleclass'
 
-context('A Mixin', function()
+describe('A Mixin', function()
 
   local Mixin1, Mixin2, Class1, Class2
 
-  before(function()
+  before_each(function()
     Mixin1, Mixin2 = {},{}
 
     function Mixin1:included(theClass) theClass.includesMixin1 = true end
@@ -23,30 +23,30 @@ context('A Mixin', function()
     function Class2:bar2() return 'bar2' end
   end)
 
-  test('invokes the "included" method when included', function()
-    assert_true(Class1.includesMixin1)
+  it('invokes the "included" method when included', function()
+    assert.is_true(Class1.includesMixin1)
   end)
 
-  test('has all its functions (except "included") copied to its target class', function()
-    assert_equal(Class1:bar(), 'bar')
-    assert_nil(Class1.included)
+  it('has all its functions (except "included") copied to its target class', function()
+    assert.equal(Class1:bar(), 'bar')
+    assert.is_nil(Class1.included)
   end)
 
-  test('makes its functions available to subclasses', function()
-    assert_equal(Class2:baz(), 'baz')
+  it('makes its functions available to subclasses', function()
+    assert.equal(Class2:baz(), 'baz')
   end)
 
-  test('allows overriding of methods in the same class', function()
-    assert_equal(Class2:foo(), 'foo1')
+  it('allows overriding of methods in the same class', function()
+    assert.equal(Class2:foo(), 'foo1')
   end)
 
-  test('allows overriding of methods on subclasses', function()
-    assert_equal(Class2:bar2(), 'bar2')
+  it('allows overriding of methods on subclasses', function()
+    assert.equal(Class2:bar2(), 'bar2')
   end)
 
-  test('makes new static methods available in classes', function()
-    assert_equal(Class1:bazzz(), 'bazzz')
-    assert_equal(Class2:bazzz(), 'bazzz')
+  it('makes new static methods available in classes', function()
+    assert.equal(Class1:bazzz(), 'bazzz')
+    assert.equal(Class2:bazzz(), 'bazzz')
   end)
 
 end)

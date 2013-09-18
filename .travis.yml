@@ -7,6 +7,6 @@ env:
 install:
   - sudo apt-get install luajit
   - sudo apt-get install luarocks
-  - sudo luarocks install telescope
+  - sudo luarocks install busted
 
-script: "tsc -f spec/*"
+script: "busted"

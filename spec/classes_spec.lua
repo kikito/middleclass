@@ -1,76 +1,76 @@
 local class = require 'middleclass'
 
-context('A Class', function()
+describe('A Class', function()
 
-  context('Default stuff', function()
+  describe('Default stuff', function()
 
     local AClass
 
-    before(function()
+    before_each(function()
       AClass = class('AClass')
     end)
 
-    context('name', function()
-      test('is correctly set', function()
-        assert_equal(AClass.name, 'AClass')
+    describe('name', function()
+      it('is correctly set', function()
+        assert.equal(AClass.name, 'AClass')
       end)
     end)
 
-    context('tostring', function()
-      test('returns "class *name*"', function()
-        assert_equal(tostring(AClass), 'class AClass')
+    describe('tostring', function()
+      it('returns "class *name*"', function()
+        assert.equal(tostring(AClass), 'class AClass')
       end)
     end)
 
-    context('()', function()
-      test('returns an object, like Class:new()', function()
+    describe('()', function()
+      it('returns an object, like Class:new()', function()
         local obj = AClass()
-        assert_equal(obj.class, AClass)
+        assert.equal(obj.class, AClass)
       end)
     end)
 
-    context('include', function()
-      test('throws an error when used without the :', function()
-        assert_error(function() AClass.include() end)
+    describe('include', function()
+      it('throws an error when used without the :', function()
+        assert.error(function() AClass.include() end)
       end)
-      test('throws an error when passed a non-table:', function()
-        assert_error(function() AClass:include(1) end)
+      it('throws an error when passed a non-table:', function()
+        assert.error(function() AClass:include(1) end)
       end)
     end)
 
-    context('subclass', function()
+    describe('subclass', function()
 
-      test('throws an error when used without the :', function()
-        assert_error(function() AClass.subclass() end)
+      it('throws an error when used without the :', function()
+        assert.error(function() AClass.subclass() end)
       end)
 
-      test('throws an error when no name is given', function()
-        assert_error( function() AClass:subclass() end)
+      it('throws an error when no name is given', function()
+        assert.error( function() AClass:subclass() end)
       end)
 
-      context('when given a subclass name', function()
+      describe('when given a subclass name', function()
 
         local SubClass
 
-        before(function()
+        before_each(function()
           function AClass.static:subclassed(other) self.static.child = other end
           SubClass = AClass:subclass('SubClass')
         end)
 
-        test('it returns a class with the correct name', function()
-          assert_equal(SubClass.name, 'SubClass')
+        it('it returns a class with the correct name', function()
+          assert.equal(SubClass.name, 'SubClass')
         end)
 
-        test('it returns a class with the correct superclass', function()
-          assert_equal(SubClass.super, AClass)
+        it('it returns a class with the correct superclass', function()
+          assert.equal(SubClass.super, AClass)
         end)
 
-        test('it invokes the subclassed hook method', function()
-          assert_equal(SubClass, AClass.child)
+        it('it invokes the subclassed hook method', function()
+          assert.equal(SubClass, AClass.child)
         end)
 
-        test('it includes the subclass in the list of subclasses', function()
-          assert_true(AClass.subclasses[SubClass])
+        it('it includes the subclass in the list of subclasses', function()
+          assert.is_true(AClass.subclasses[SubClass])
         end)
 
       end)
@@ -81,56 +81,56 @@ context('A Class', function()
 
 
 
-  context('attributes', function()
+  describe('attributes', function()
 
     local A, B
 
-    before(function()
+    before_each(function()
       A = class('A')
       A.static.foo = 'foo'
 
       B = class('B', A)
     end)
 
-    test('are available after being initialized', function()
-      assert_equal(A.foo, 'foo')
+    it('are available after being initialized', function()
+      assert.equal(A.foo, 'foo')
     end)
 
-    test('are available for subclasses', function()
-      assert_equal(B.foo, 'foo')
+    it('are available for subclasses', function()
+      assert.equal(B.foo, 'foo')
     end)
 
-    test('are overridable by subclasses, without affecting the superclasses', function()
+    it('are overridable by subclasses, without affecting the superclasses', function()
       B.static.foo = 'chunky bacon'
-      assert_equal(B.foo, 'chunky bacon')
-      assert_equal(A.foo, 'foo')
+      assert.equal(B.foo, 'chunky bacon')
+      assert.equal(A.foo, 'foo')
     end)
 
   end)
 
-  context('methods', function()
+  describe('methods', function()
 
     local A, B
 
-    before(function()
+    before_each(function()
       A = class('A')
       function A.static:foo() return 'foo' end
 
       B = class('B', A)
     end)
 
-    test('are available after being initialized', function()
-      assert_equal(A:foo(), 'foo')
+    it('are available after being initialized', function()
+      assert.equal(A:foo(), 'foo')
     end)
 
-    test('are available for subclasses', function()
-      assert_equal(B:foo(), 'foo')
+    it('are available for subclasses', function()
+      assert.equal(B:foo(), 'foo')
     end)
 
-    test('are overridable by subclasses, without affecting the superclasses', function()
+    it('are overridable by subclasses, without affecting the superclasses', function()
       function B.static:foo() return 'chunky bacon' end
-      assert_equal(B:foo(), 'chunky bacon')
-      assert_equal(A:foo(), 'foo')
+      assert.equal(B:foo(), 'chunky bacon')
+      assert.equal(A:foo(), 'foo')
     end)
 
   end)

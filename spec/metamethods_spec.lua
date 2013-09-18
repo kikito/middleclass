@@ -1,9 +1,9 @@
 local class = require 'middleclass'
 local Object = class.Object
 
-context('Metamethods', function()
+describe('Metamethods', function()
 
-  context('Custom Metamethods', function()
+  describe('Custom Metamethods', function()
     -- Tests all metamethods. Note that __len is missing (lua makes table length unoverridable)
     -- I'll use a() to note the length of vector "a" (I would have preferred to use #a, but it's not possible)
     -- I'll be using 'a' instead of 'self' on this example since it is shorter
@@ -45,12 +45,12 @@ context('Metamethods', function()
       __mul =      { 4*a,  Vector(4,8,12) }--,
       --__index =    { b[1], 3 }
     }) do
-      test(metamethod .. ' works as expected', function()
-        assert_equal(values[1], values[2])
+      it(metamethod .. ' works as expected', function()
+        assert.equal(values[1], values[2])
       end)
     end
 
-    context('Inherited Metamethods', function()
+    describe('Inherited Metamethods', function()
       local Vector2= class('Vector2', Vector)
       function Vector2:initialize(x,y,z) Vector.initialize(self,x,y,z) end
 
@@ -70,36 +70,36 @@ context('Metamethods', function()
         __pow =      { c^d,  Vector(0,0,0) },
         __mul =      { 4*c,  Vector(4,8,12) }
       }) do
-        test(metamethod .. ' works as expected', function()
-          assert_equal(values[1], values[2])
+        it(metamethod .. ' works as expected', function()
+          assert.equal(values[1], values[2])
         end)
       end
     end)
 
   end)
 
-  context('Default Metamethods', function()
+  describe('Default Metamethods', function()
 
     local Peter, peter
 
-    before(function()
+    before_each(function()
       Peter = class('Peter')
       peter = Peter()
     end)
 
-    context('A Class', function()
-      test('has a call metamethod properly set', function()
-        assert_true(instanceOf(Peter, peter))
+    describe('A Class', function()
+      it('has a call metamethod properly set', function()
+        assert.is_true(peter:isInstanceOf(Peter))
       end)
-      test('has a tostring metamethod properly set', function()
-        assert_equal(tostring(Peter), 'class Peter')
+      it('has a tostring metamethod properly set', function()
+        assert.equal(tostring(Peter), 'class Peter')
       end)
     end)
 
-    context('An instance', function()
-      test('has a tostring metamethod, returning a different result from Object.__tostring', function()
-        assert_not_equal(Peter.__tostring, Object.__tostring)
-        assert_equal(tostring(peter), 'instance of class Peter')
+    describe('An instance', function()
+      it('has a tostring metamethod, returning a different result from Object.__tostring', function()
+        assert.not_equal(Peter.__tostring, Object.__tostring)
+        assert.equal(tostring(peter), 'instance of class Peter')
       end)
     end)
   end)
