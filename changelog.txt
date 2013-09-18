@@ -1,8 +1,0 @@
-Version 2.0
-
-* Static methods are now separated from instance methods
-* class.superclass has now become class.super
-* It's now possible to do class.subclasses
-* middleclass is now a single file; init.lua has dissapeared
-* license is changed from BSD to MIT. License included in source FTW
-
