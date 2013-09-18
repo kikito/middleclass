@@ -27,71 +27,71 @@ local middleclass = {
   ]]
 }
 
-local function _setClassDictionariesMetatables(klass)
-  local dict = klass.__instanceDict
+local function _setClassDictionariesMetatables(aClass)
+  local dict = aClass.__instanceDict
   dict.__index = dict
 
-  local super = klass.super
+  local super = aClass.super
   if super then
     local superStatic = super.static
     setmetatable(dict, super.__instanceDict)
-    setmetatable(klass.static, { __index = function(_,k) return dict[k] or superStatic[k] end })
+    setmetatable(aClass.static, { __index = function(_,k) return dict[k] or superStatic[k] end })
   else
-    setmetatable(klass.static, { __index = function(_,k) return dict[k] end })
+    setmetatable(aClass.static, { __index = function(_,k) return dict[k] end })
   end
 end
 
-local function _setClassMetatable(klass)
-  setmetatable(klass, {
-    __tostring = function() return "class " .. klass.name end,
-    __index    = klass.static,
-    __newindex = klass.__instanceDict,
+local function _setClassMetatable(aClass)
+  setmetatable(aClass, {
+    __tostring = function() return "class " .. aClass.name end,
+    __index    = aClass.static,
+    __newindex = aClass.__instanceDict,
     __call     = function(self, ...) return self:new(...) end
   })
 end
 
 local function _createClass(name, super)
-  local klass = { name = name, super = super, static = {}, __mixins = {}, __instanceDict={} }
-  klass.subclasses = setmetatable({}, {__mode = "k"})
+  local aClass = { name = name, super = super, static = {}, __mixins = {}, __instanceDict={} }
+  aClass.subclasses = setmetatable({}, {__mode = "k"})
 
-  _setClassDictionariesMetatables(klass)
-  _setClassMetatable(klass)
+  _setClassDictionariesMetatables(aClass)
+  _setClassMetatable(aClass)
 
-  return klass
+  return aClass
 end
 
-local function _createLookupMetamethod(klass, name)
+local function _createLookupMetamethod(aClass, name)
   return function(...)
-    local method = klass.super[name]
-    assert( type(method)=='function', tostring(klass) .. " doesn't implement metamethod '" .. name .. "'" )
+    local method = aClass.super[name]
+    assert( type(method)=='function', tostring(aClass) .. " doesn't implement metamethod '" .. name .. "'" )
     return method(...)
   end
 end
 
-local function _setClassMetamethods(klass)
-  for _,m in ipairs(klass.__metamethods) do
-    klass[m]= _createLookupMetamethod(klass, m)
+local function _setClassMetamethods(aClass)
+  for _,m in ipairs(aClass.__metamethods) do
+    aClass[m]= _createLookupMetamethod(aClass, m)
   end
 end
 
-local function _setDefaultInitializeMethod(klass, super)
-  klass.initialize = function(instance, ...)
+local function _setDefaultInitializeMethod(aClass, super)
+  aClass.initialize = function(instance, ...)
     return super.initialize(instance, ...)
   end
 end
 
-local function _includeMixin(klass, mixin)
+local function _includeMixin(aClass, mixin)
   assert(type(mixin)=='table', "mixin must be a table")
   for name,method in pairs(mixin) do
-    if name ~= "included" and name ~= "static" then klass[name] = method end
+    if name ~= "included" and name ~= "static" then aClass[name] = method end
   end
   if mixin.static then
     for name,method in pairs(mixin.static) do
-      klass.static[name] = method
+      aClass.static[name] = method
     end
   end
-  if type(mixin.included)=="function" then mixin:included(klass) end
-  klass.__mixins[mixin] = true
+  if type(mixin.included)=="function" then mixin:included(aClass) end
+  aClass.__mixins[mixin] = true
 end
 
 local Object = _createClass("Object", nil)
