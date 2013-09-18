@@ -100,7 +100,7 @@ Object.static.__metamethods = { '__add', '__call', '__concat', '__div', '__le', 
                                 '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm' }
 
 function Object.static:allocate()
-  assert(self, "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
+  assert(type(self) == 'table', "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
   return setmetatable({ class = self }, self.__instanceDict)
 end
 
@@ -111,7 +111,7 @@ function Object.static:new(...)
 end
 
 function Object.static:subclass(name)
-  assert(self, "Make sure that you are using 'Class:subclass' instead of 'Class.subclass'")
+  assert(type(self) == 'table', "Make sure that you are using 'Class:subclass' instead of 'Class.subclass'")
   assert(type(name) == "string", "You must provide a name(string) for your class")
 
   local subclass = _createClass(name, self)
@@ -136,7 +136,7 @@ function Object.static:isSubclassOf(other)
 end
 
 function Object.static:include( ... )
-  assert(self, "Make sure you that you are using 'Class:include' instead of 'Class.include'")
+  assert(type(self) == 'table', "Make sure you that you are using 'Class:include' instead of 'Class.include'")
   for _,mixin in ipairs({...}) do _includeMixin(self, mixin) end
   return self
 end
