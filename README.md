@@ -35,7 +35,7 @@ Quick Look
 Documentation
 =============
 
-See the "github wiki page":https://github.com/kikito/middleclass/wiki for examples & documentation.
+See the [github wiki page](https://github.com/kikito/middleclass/wiki) for examples & documentation.
 
 Installation
 ============
