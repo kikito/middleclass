@@ -97,7 +97,8 @@ end
 local Object = _createClass("Object", nil)
 
 Object.static.__metamethods = { '__add', '__call', '__concat', '__div', '__le', '__lt',
-                                '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm' }
+                                '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm',
+                                '__len','__pairs','__ipairs'}
 
 function Object.static:allocate()
   assert(type(self) == 'table', "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
