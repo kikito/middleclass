@@ -4,9 +4,6 @@ local Object = class.Object
 describe('Metamethods', function()
 
   describe('Custom Metamethods', function()
-    -- Tests all metamethods. Note that __len is missing (lua makes table length unoverridable)
-    -- I'll use a() to note the length of vector "a" (I would have preferred to use #a, but it's not possible)
-    -- I'll be using 'a' instead of 'self' on this example since it is shorter
     local Vector= class('Vector')
     function Vector.initialize(a,x,y,z) a.x, a.y, a.z = x,y,z end
     function Vector.__tostring(a) return a.class.name .. '[' .. a.x .. ',' .. a.y .. ',' .. a.z .. ']' end
@@ -26,6 +23,23 @@ describe('Metamethods', function()
       if type(b)=="number" then return Vector:new(a.x*b, a.y*b, a.z*b) end
       if type(a)=="number" then return Vector:new(a*b.x, a*b.y, a*b.z) end
     end
+    function Vector.__len(a)    return 3 end
+    function Vector.__pairs(a)
+      local t = {x=a.x,y=a.y,z=a.z}
+      return coroutine.wrap(function() 
+          for k,v in pairs(t) do
+            coroutine.yield(k,v)
+          end
+        end)
+    end
+    function Vector.__ipairs(a)
+      local t = {a.x,a.y,a.z}
+      return coroutine.wrap(function() 
+          for k,v in ipairs(t) do
+            coroutine.yield(k,v)
+          end
+        end)
+    end
 
     local a = Vector:new(1,2,3)
     local b = Vector:new(2,4,6)
@@ -42,13 +56,28 @@ describe('Metamethods', function()
       __concat =   { a..b, 28 },
       __call =     { a(), math.sqrt(14) },
       __pow =      { a^b,  Vector(0,0,0) },
-      __mul =      { 4*a,  Vector(4,8,12) }--,
+      __mul =      { 4*a,  Vector(4,8,12) },
+      __len =      { #a,  3},
       --__index =    { b[1], 3 }
     }) do
       it(metamethod .. ' works as expected', function()
         assert.equal(values[1], values[2])
       end)
     end
+    it('__pairs works as expected',function() 
+      local output = {}
+      for k,v in pairs(a) do
+        output[k] = v
+      end
+      assert.are.same(output,{x=1,y=2,z=3})
+    end)
+    it('__ipairs works as expected',function() 
+      local output = {}
+      for _,i in ipairs(a) do
+        output[#output+1] = i
+      end
+      assert.are.same(output,{1,2,3})
+    end)
 
     describe('Inherited Metamethods', function()
       local Vector2= class('Vector2', Vector)
@@ -68,12 +97,28 @@ describe('Metamethods', function()
         __concat =   { c..d, 28 },
         __call =     { c(), math.sqrt(14) },
         __pow =      { c^d,  Vector(0,0,0) },
-        __mul =      { 4*c,  Vector(4,8,12) }
+        __mul =      { 4*c,  Vector(4,8,12) },
+        __len =      { #c,  3},
       }) do
         it(metamethod .. ' works as expected', function()
           assert.equal(values[1], values[2])
         end)
       end
+      it('__pairs works as expected',function() 
+        local output = {}
+        for k,v in pairs(c) do
+          output[k] = v
+        end
+        assert.are.same(output,{x=1,y=2,z=3})
+      end)
+      it('__ipairs works as expected',function() 
+        local output = {}
+        for _,i in ipairs(c) do
+          output[#output+1] = i
+        end
+        assert.are.same(output,{1,2,3})
+      end)
+
     end)
 
   end)
