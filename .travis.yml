@@ -13,7 +13,6 @@ env:
 install:
   - sudo apt-get install $LUA -y
   - sudo apt-get install $LUA_DEV -y
-  - sudo luarocks install busted
   - wget http://luarocks.org/releases/$LUAROCKS_BASE.tar.gz
   - tar zxvpf $LUAROCKS_BASE.tar.gz
   - cd $LUAROCKS_BASE
