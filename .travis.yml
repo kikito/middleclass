@@ -1,12 +1,32 @@
 language: erlang
 
 env:
-  - LUA=""
-  - LUA="luajit"
+  global:
+    - LUAROCKS_BASE=luarocks-2.0.13
+    - LUAROCKS="$LUA $HOME/bin/luarocks"
+
+  matrix:
+    - LUA=lua5.1 LUA_DEV=liblua5.1-dev     LUA_EXE=lua    LUA_SFX=5.1 LUA_INCDIR=/usr/include/lua5.1
+    - LUA=lua5.2 LUA_DEV=liblua5.2-dev     LUA_EXE=lua    LUA_SFX=5.2 LUA_INCDIR=/usr/include/lua5.2
+    - LUA=luajit LUA_DEV=libluajit-5.1-dev LUA_EXE=luajit LUA_SFX=jit LUA_INCDIR=/usr/include/luajit-2.0
+
+before_install:
+  - sudo apt-get install $LUA -y
+  - sudo apt-get install $LUA_DEV -y
+  - sudo luarocks install busted
+  - wget http://luarocks.org/releases/$LUAROCKS_BASE.tar.gz
+  - tar zxvpf $LUAROCKS_BASE.tar.gz
+  - cd $LUAROCKS_BASE
+  - ./configure
+    --prefix=$HOME --lua-version=5.1 --lua-suffix=$LUA_SFX
+    --with-lua-include=$LUA_INCDIR
+  - make all install
+  - cd $TRAVIS_BUILD_DIR
 
 install:
-  - sudo apt-get install luajit
-  - sudo apt-get install luarocks
-  - sudo luarocks install busted
+  - cd $TRAVIS_BUILD_DIR
+  - $LUAROCKS install busted
 
-script: "busted"
+script:
+  - cd $TRAVIS_BUILD_DIR
+  - busted -l $LUA_EXE spec
