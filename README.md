@@ -59,6 +59,11 @@ Middleclass also comes with a small performance test suite. Just run the followi
 
     lua performance/run.lua
 
+License
+=======
+
+Middleclass is distributed under the MIT license.
+
 Updating from 2.x
 =================
 
