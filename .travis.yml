@@ -3,26 +3,34 @@ language: erlang
 env:
   global:
     - LUAROCKS_BASE=luarocks-2.0.13
-    - LUAROCKS="$LUA $HOME/bin/luarocks"
-
   matrix:
-    - LUA=lua5.1 LUA_DEV=liblua5.1-dev     LUA_EXE=lua    LUA_SFX=5.1 LUA_INCDIR=/usr/include/lua5.1
-    - LUA=lua5.2 LUA_DEV=liblua5.2-dev     LUA_EXE=lua    LUA_SFX=5.2 LUA_INCDIR=/usr/include/lua5.2
-    - LUA=luajit LUA_DEV=libluajit-5.1-dev LUA_EXE=luajit LUA_SFX=jit LUA_INCDIR=/usr/include/luajit-2.0
+    - LUA=lua5.1 LUA_DEV=liblua5.1-dev LUA_VER=5.1 LUA_SFX=5.1 LUA_INCDIR=/usr/include/lua5.1
+    - LUA=lua5.2 LUA_DEV=liblua5.2-dev LUA_VER=5.2 LUA_SFX=5.2 LUA_INCDIR=/usr/include/lua5.2
+    - LUA=luajit LUA_DEV=libluajit-5.1-dev LUA_VER=5.1 LUA_SFX=jit LUA_INCDIR=/usr/include/luajit-2.0
 
-install:
-  - sudo apt-get install $LUA -y
-  - sudo apt-get install $LUA_DEV -y
+before_install:
+  - sudo apt-get install $LUA
+  - sudo apt-get install $LUA_DEV
+  - lua$LUA_SFX -v
+  # Install a recent luarocks release
   - wget http://luarocks.org/releases/$LUAROCKS_BASE.tar.gz
   - tar zxvpf $LUAROCKS_BASE.tar.gz
   - cd $LUAROCKS_BASE
   - ./configure
-    --prefix=$HOME --lua-version=5.1 --lua-suffix=$LUA_SFX
-    --with-lua-include=$LUA_INCDIR
-  - make all install
+    --lua-version=$LUA_VER --lua-suffix=$LUA_SFX --with-lua-include="$LUA_INCDIR"
+  - sudo make
+  - sudo make install
   - cd $TRAVIS_BUILD_DIR
-  - $LUAROCKS install busted
+
+
+install:
+  - export DEBUG=DEBUG
+  - sudo -E luarocks install busted
 
 script:
-  - cd $TRAVIS_BUILD_DIR
-  - busted -l $LUA_EXE spec
+  - sudo -E busted -v
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
