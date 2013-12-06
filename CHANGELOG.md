@@ -1,6 +1,10 @@
 middleclass changelog
 ====================
 
+Version 3.0.1
+
+* Added `__len`, `__ipairs` and `__pairs` metamethods for Lua 5.2
+
 Version 3.0
 
 * Anything that behaves reasonably like a class can be a class (no internal list of classes)
