@@ -67,7 +67,7 @@ Middleclass is distributed under the MIT license.
 Updating from 2.x
 =================
 
-Middleclass used to expose several global variables on the main scope. It does not do that any more.
+Middleclass used to expose several global variables on the main scope. It does not do that anymore.
 
 `class` is now returned by `require 'middleclass'`, and it is not set globally. So you can do this:
 
@@ -83,26 +83,26 @@ Middleclass used to expose several global variables on the main scope. It does n
 
 The public functions `instanceOf`, `subclassOf` and `includes` have been replaced by `Object.isInstanceOf`, `Object.static.isSubclassOf` and `Object.static.includes`.
 
-Before:
+Prior to 3.x:
 
     instanceOf(MyClass, obj)
     subclassOf(Object, aClass)
     includes(aMixin, aClass)
 
-After:
+Since 3.x:
 
     obj:isInstanceOf(MyClass)
     aClass:isSubclassOf(Object)
     aClass:includes(aMixin)
 
-The previous code will throw an error if `obj` is not an object, or if `aClass` is not a class (since they will not implement `isInstanceOf`, `isSubclassOf` or `includes`).
-If you are unsure of wether `obj` and `aClass` are an object or a class, you can use the methods in `Object`. They are prepared to work with random types, not just classes and instances:
+The 3.x code snippet will throw an error if `obj` is not an object, or if `aClass` is not a class (since they will not implement `isInstanceOf`, `isSubclassOf` or `includes`).
+If you are unsure of whether `obj` and `aClass` are an object or a class, you can use the methods in `Object`. They are prepared to work with random types, not just classes and instances:
 
     Object.isInstanceOf(obj, MyClass)
     Object.isSubclassOf(aClass, Object)
     Object.includes(aClass, aMixin)
 
-Notice that the parameter order is not the same now as it was in 2.x. Also note the change in naming: `isInstanceOf` instead of `istanceOf`, and `isSubclassOf` instead of `subclassOf`.
+Notice that the parameter order is not the same now as it was in 2.x. Also note the change in naming: `isInstanceOf` instead of `instanceOf`, and `isSubclassOf` instead of `subclassOf`.
 
 
 
