@@ -36,7 +36,7 @@ local function _setClassDictionariesMetatables(aClass)
   if super then
     local superStatic = super.static
     setmetatable(dict, super.__instanceDict)
-    setmetatable(aClass.static, { __index = function(_,k) return dict[k] or superStatic[k] end })
+    setmetatable(aClass.static, { __index = function(_,k) return rawget(dict,k) or superStatic[k] end })
   else
     setmetatable(aClass.static, { __index = function(_,k) return dict[k] end })
   end
