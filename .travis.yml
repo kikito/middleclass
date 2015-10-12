@@ -13,7 +13,7 @@ install:
   - sudo apt-get update -qq
   - sudo luarocks install busted
 
-script: busted
+script: busted -v
 
 branches:
   except:
