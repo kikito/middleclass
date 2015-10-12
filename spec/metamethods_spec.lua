@@ -12,49 +12,52 @@ end
 describe('Metamethods', function()
 
   describe('Custom Metamethods', function()
-    local Vector= class('Vector')
-    function Vector.initialize(a,x,y,z) a.x, a.y, a.z = x,y,z end
-    function Vector.__tostring(a) return a.class.name .. '[' .. a.x .. ',' .. a.y .. ',' .. a.z .. ']' end
-    function Vector.__eq(a,b)     return a.x==b.x and a.y==b.y and a.z==b.z end
-    function Vector.__lt(a,b)     return a() < b() end
-    function Vector.__le(a,b)     return a() <= b() end
-    function Vector.__add(a,b)    return Vector:new(a.x+b.x, a.y+b.y ,a.z+b.z) end
-    function Vector.__sub(a,b)    return Vector:new(a.x-b.x, a.y-b.y, a.z-b.z) end
-    function Vector.__div(a,s)    return Vector:new(a.x/s, a.y/s, a.z/s) end
-    function Vector.__unm(a)      return Vector:new(-a.x, -a.y, -a.z) end
-    function Vector.__concat(a,b) return a.x*b.x+a.y*b.y+a.z*b.z end
-    function Vector.__call(a)     return math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z) end
-    function Vector.__pow(a,b)
-      return Vector:new(a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x)
-    end
-    function Vector.__mul(a,b)
-      if type(b)=="number" then return Vector:new(a.x*b, a.y*b, a.z*b) end
-      if type(a)=="number" then return Vector:new(a*b.x, a*b.y, a*b.z) end
-    end
-    function Vector.__len(a)    return 3 end
-    function Vector.__pairs(a)
-      local t = {x=a.x,y=a.y,z=a.z}
-      return coroutine.wrap(function()
-          for k,v in pairs(t) do
-            coroutine.yield(k,v)
-          end
-        end)
-    end
-    function Vector.__ipairs(a)
-      local t = {a.x,a.y,a.z}
-      return coroutine.wrap(function()
-          for k,v in ipairs(t) do
-            coroutine.yield(k,v)
-          end
-        end)
-    end
+    local Vector, a, b
+    before_each(function()
+      Vector= class('Vector')
+      function Vector.initialize(a,x,y,z) a.x, a.y, a.z = x,y,z end
+      function Vector.__tostring(a) return a.class.name .. '[' .. a.x .. ',' .. a.y .. ',' .. a.z .. ']' end
+      function Vector.__eq(a,b)     return a.x==b.x and a.y==b.y and a.z==b.z end
+      function Vector.__lt(a,b)     return a() < b() end
+      function Vector.__le(a,b)     return a() <= b() end
+      function Vector.__add(a,b)    return Vector:new(a.x+b.x, a.y+b.y ,a.z+b.z) end
+      function Vector.__sub(a,b)    return Vector:new(a.x-b.x, a.y-b.y, a.z-b.z) end
+      function Vector.__div(a,s)    return Vector:new(a.x/s, a.y/s, a.z/s) end
+      function Vector.__unm(a)      return Vector:new(-a.x, -a.y, -a.z) end
+      function Vector.__concat(a,b) return a.x*b.x+a.y*b.y+a.z*b.z end
+      function Vector.__call(a)     return math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z) end
+      function Vector.__pow(a,b)
+        return Vector:new(a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x)
+      end
+      function Vector.__mul(a,b)
+        if type(b)=="number" then return Vector:new(a.x*b, a.y*b, a.z*b) end
+        if type(a)=="number" then return Vector:new(a*b.x, a*b.y, a*b.z) end
+      end
+      function Vector.__len(a)    return 3 end
+      function Vector.__pairs(a)
+        local t = {x=a.x,y=a.y,z=a.z}
+        return coroutine.wrap(function()
+            for k,v in pairs(t) do
+              coroutine.yield(k,v)
+            end
+          end)
+      end
+      function Vector.__ipairs(a)
+        local t = {a.x,a.y,a.z}
+        return coroutine.wrap(function()
+            for k,v in ipairs(t) do
+              coroutine.yield(k,v)
+            end
+          end)
+      end
+      function Vector.__gc(a)
+        b.x, b.y, b.z = a.x, a.y, a.z
+      end
 
-    local a = Vector:new(1,2,3)
-    local b = Vector:new(2,4,6)
+      a = Vector:new(1,2,3)
+      b = Vector:new(2,4,6)
+    end)
 
-    function Vector.__gc(a)
-      b.x, b.y, b.z = a.x, a.y, a.z
-    end
 
     for metamethod,values in pairs({
       __tostring = { tostring(a), "Vector[1,2,3]" },
@@ -105,7 +108,6 @@ describe('Metamethods', function()
           assert.are.same(output,{1,2,3})
         end)
       end)
-
     end
 
     if is_lua_5_3_compatible() then
