@@ -58,60 +58,81 @@ describe('Metamethods', function()
       b = Vector:new(2,4,6)
     end)
 
+    it('implements __tostring', function()
+      assert.equal(tostring(a), "Vector[1,2,3]")
+    end)
 
-    for metamethod,values in pairs({
-      __tostring = { tostring(a), "Vector[1,2,3]" },
-      __eq =       { a,    a},
-      __lt =       { a<b,  true },
-      __le =       { a<=b, true },
-      __add =      { a+b,  Vector(3,6,9) },
-      __sub =      { b-a,  Vector(1,2,3) },
-      __div =      { b/2,  Vector(1,2,3) },
-      __unm =      { -a,   Vector(-1,-2,-3) },
-      __concat =   { a..b, 28 },
-      __call =     { a(), math.sqrt(14) },
-      __pow =      { a^b,  Vector(0,0,0) },
-      __mul =      { 4*a,  Vector(4,8,12) },
-      --__index =    { b[1], 3 }
-    }) do
-      describe(metamethod, function()
-        it('works as expected', function()
-          assert.equal(values[1], values[2])
-        end)
-      end)
-    end
+    it('implements __eq', function()
+      assert.equal(a, a)
+    end)
+
+    it('implements __lt', function()
+      assert.is_true(a < b)
+    end)
+
+    it('implements __le', function()
+      assert.is_true(a <= b)
+    end)
+
+    it('implements __add', function()
+      assert.equal(a+b, Vector(3,6,9))
+    end)
+
+    it('implements __sub', function()
+      assert.equal(b-a, Vector(1,2,3))
+    end)
+
+    it('implements __div', function()
+      assert.equal(b/2, Vector(1,2,3))
+    end)
+
+    it('implements __concat', function()
+      assert.equal(a..b, 28)
+    end)
+
+    it('implements __call', function()
+      assert.equal(a(), math.sqrt(14))
+    end)
+
+    it('implements __pow', function()
+      assert.equal(a^b, Vector(0,0,0))
+    end)
+
+    it('implements __mul', function()
+      assert.equal(4*a, Vector(4,8,12))
+    end)
+
+    --[[
+    it('implements __index', function()
+      assert.equal(b[1], 3)
+    end)
+    --]]
 
     if is_lua_5_2_compatible() then
 
-      describe('__len', function()
-        it('works as expected', function()
-          assert.equal(#a, 3)
-        end)
+      it('implements __len', function()
+        assert.equal(#a, 3)
       end)
 
-      describe('__pairs', function()
-        it('works as expected',function()
-          local output = {}
-          for k,v in pairs(a) do
-            output[k] = v
-          end
-          assert.are.same(output,{x=1,y=2,z=3})
-        end)
+      it('implements __pairs',function()
+        local output = {}
+        for k,v in pairs(a) do
+          output[k] = v
+        end
+        assert.are.same(output,{x=1,y=2,z=3})
       end)
 
-      describe('__ipairs', function()
-        it('works as expected',function()
-          local output = {}
-          for _,i in ipairs(a) do
-            output[#output+1] = i
-          end
-          assert.are.same(output,{1,2,3})
-        end)
+      it('implements __ipairs',function()
+        local output = {}
+        for _,i in ipairs(a) do
+          output[#output+1] = i
+        end
+        assert.are.same(output,{1,2,3})
       end)
     end
 
     if is_lua_5_3_compatible() then
-      describe('__gc', function()
+      it('implements __gc', function()
         a = nil
         collectgarbage()
         assert.are.same({b.x, b.y, b.z}, {1,2,3})
@@ -119,64 +140,91 @@ describe('Metamethods', function()
     end
 
     describe('Inherited Metamethods', function()
-      local Vector2= class('Vector2', Vector)
-      function Vector2:initialize(x,y,z) Vector.initialize(self,x,y,z) end
+      local Vector2, c, d
 
-      local c = Vector2:new(1,2,3)
-      local d = Vector2:new(2,4,6)
-      for metamethod,values in pairs({
-        __tostring = { tostring(c), "Vector2[1,2,3]" },
-        __eq =       { c, c },
-        __lt =       { c<d,  true },
-        __le =       { c<=d, true },
-        __add =      { c+d,  Vector(3,6,9) },
-        __sub =      { d-c,  Vector(1,2,3) },
-        __div =      { d/2,  Vector(1,2,3) },
-        __unm =      { -c,   Vector(-1,-2,-3) },
-        __concat =   { c..d, 28 },
-        __call =     { c(), math.sqrt(14) },
-        __pow =      { c^d,  Vector(0,0,0) },
-        __mul =      { 4*c,  Vector(4,8,12) },
-      }) do
-        describe(metamethod, function()
-          it('works as expected', function()
-            assert.equal(values[1], values[2])
-          end)
-        end)
-      end
+      before_each(function()
+        Vector2= class('Vector2', Vector)
+        function Vector2:initialize(x,y,z) Vector.initialize(self,x,y,z) end
+
+        c = Vector2:new(1,2,3)
+        d = Vector2:new(2,4,6)
+      end)
+
+      it('implements __tostring', function()
+        assert.equal(tostring(c), "Vector2[1,2,3]")
+      end)
+
+      it('implements __eq', function()
+        assert.equal(c, c)
+      end)
+
+      it('implements __lt', function()
+        assert.is_true(c < d)
+      end)
+
+      it('implements __le', function()
+        assert.is_true(c <= d)
+      end)
+
+      it('implements __add', function()
+        assert.equal(c+d, Vector(3,6,9))
+      end)
+
+      it('implements __sub', function()
+        assert.equal(d-c, Vector(1,2,3))
+      end)
+
+      it('implements __div', function()
+        assert.equal(d/2, Vector(1,2,3))
+      end)
+
+      it('implements __concat', function()
+        assert.equal(c..d, 28)
+      end)
+
+      it('implements __call', function()
+        assert.equal(c(), math.sqrt(14))
+      end)
+
+      it('implements __pow', function()
+        assert.equal(c^d, Vector(0,0,0))
+      end)
+
+      it('implements __mul', function()
+        assert.equal(4*c, Vector(4,8,12))
+      end)
 
       if is_lua_5_2_compatible() then
 
-        describe('__len', function()
-          it('works as expected', function()
-            assert.equal(#c, 3)
-          end)
+        it('implements __len', function()
+          assert.equal(#c, 3)
         end)
 
-        describe('__pairs', function()
-          it('works as expected',function()
-            local output = {}
-            for k,v in pairs(c) do
-              output[k] = v
-            end
-            assert.are.same(output,{x=1,y=2,z=3})
-          end)
+        it('implements __pairs',function()
+          local output = {}
+          for k,v in pairs(c) do
+            output[k] = v
+          end
+          assert.are.same(output,{x=1,y=2,z=3})
         end)
 
-        describe('__ipairs', function()
-          it('works as expected', function()
-            local output = {}
-            for _,i in ipairs(c) do
-              output[#output+1] = i
-            end
-            assert.are.same(output,{1,2,3})
-          end)
+        it('implements __ipairs',function()
+          local output = {}
+          for _,i in ipairs(c) do
+            output[#output+1] = i
+          end
+          assert.are.same(output,{1,2,3})
         end)
-
       end
 
+      if is_lua_5_3_compatible() then
+        it('implements __gc', function()
+          c = nil
+          collectgarbage()
+          assert.are.same({b.x, b.y, b.z}, {1,2,3})
+        end)
+      end
     end)
-
   end)
 
   describe('Default Metamethods', function()
