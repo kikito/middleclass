@@ -5,6 +5,10 @@ local function is_lua_5_2_compatible()
   return type(rawlen) == 'function'
 end
 
+local function is_lua_5_3_compatible()
+  return type(string.unpack) == 'function'
+end
+
 describe('Metamethods', function()
 
   describe('Custom Metamethods', function()
@@ -48,6 +52,10 @@ describe('Metamethods', function()
     local a = Vector:new(1,2,3)
     local b = Vector:new(2,4,6)
 
+    function Vector.__gc(a)
+      b.x, b.y, b.z = a.x, a.y, a.z
+    end
+
     for metamethod,values in pairs({
       __tostring = { tostring(a), "Vector[1,2,3]" },
       __eq =       { a,    a},
@@ -60,7 +68,7 @@ describe('Metamethods', function()
       __concat =   { a..b, 28 },
       __call =     { a(), math.sqrt(14) },
       __pow =      { a^b,  Vector(0,0,0) },
-      __mul =      { 4*a,  Vector(4,8,12) }
+      __mul =      { 4*a,  Vector(4,8,12) },
       --__index =    { b[1], 3 }
     }) do
       describe(metamethod, function()
@@ -98,6 +106,14 @@ describe('Metamethods', function()
         end)
       end)
 
+    end
+
+    if is_lua_5_3_compatible() then
+      describe('__gc', function()
+        a = nil
+        collectgarbage()
+        assert.are.same({b.x, b.y, b.z}, {1,2,3})
+      end)
     end
 
     describe('Inherited Metamethods', function()
