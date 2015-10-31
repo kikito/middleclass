@@ -27,7 +27,7 @@ describe('Metamethods', function()
       function Vector.__concat(a,b) return a.x*b.x+a.y*b.y+a.z*b.z end
       function Vector.__call(a)     return math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z) end
       function Vector.__pow(a,b)
-        return Vector:new(a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x)
+        return a.class:new(a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x)
       end
       function Vector.__mul(a,b)
         if type(b)=="number" then return a.class:new(a.x*b, a.y*b, a.z*b) end
@@ -55,15 +55,17 @@ describe('Metamethods', function()
       end
 
       if is_lua_5_3_compatible() then
-        function Vector.__gc(a)
-          b.x, b.y, b.z = a.x, a.y, a.z
-        end
-        function Vector.__band(a,n) return a.class:new(a.x & n, a.y & n, a.z & n) end
-        function Vector.__bor(a,n)  return a.class:new(a.x | n, a.y | n, a.z | n) end
-        function Vector.__bxor(a,n) return a.class:new(a.x ~ n, a.y ~ n, a.z ~ n) end
-        function Vector.__shl(a,n)  return a.class:new(a.x << n, a.y << n, a.z << n) end
-        function Vector.__shr(a,n)  return a.class:new(a.x >> n, a.y >> n, a.z >> n) end
-        function Vector.__bnot(a)   return a.class:new(~a.x, ~a.y, ~a.z) end
+        eval([[
+          function Vector.__gc(a)
+            b.x, b.y, b.z = a.x, a.y, a.z
+          end
+          function Vector.__band(a,n) return a.class:new(a.x & n, a.y & n, a.z & n) end
+          function Vector.__bor(a,n)  return a.class:new(a.x | n, a.y | n, a.z | n) end
+          function Vector.__bxor(a,n) return a.class:new(a.x ~ n, a.y ~ n, a.z ~ n) end
+          function Vector.__shl(a,n)  return a.class:new(a.x << n, a.y << n, a.z << n) end
+          function Vector.__shr(a,n)  return a.class:new(a.x >> n, a.y >> n, a.z >> n) end
+          function Vector.__bnot(a)   return a.class:new(~a.x, ~a.y, ~a.z) end
+        ]])
       end
 
       a = Vector:new(1,2,3)
@@ -143,37 +145,37 @@ describe('Metamethods', function()
     end
 
     if is_lua_5_3_compatible() then
+      eval([[
+        it('implements __gc', function()
+          a = nil
+          collectgarbage()
+          assert.are.same({b.x, b.y, b.z}, {1,2,3})
+        end)
 
-      it('implements __gc', function()
-        a = nil
-        collectgarbage()
-        assert.are.same({b.x, b.y, b.z}, {1,2,3})
-      end)
+        it('implements __band', function()
+          assert.equal(a & 1, Vector(1,1,1))
+        end)
 
-      it('implements __band', function()
-        assert.equal(a & 1, Vector(1,1,1))
-      end)
+        it('implements __bor', function()
+          assert.equal(a | 0, Vector(1,2,3))
+        end)
 
-      it('implements __bor', function()
-        assert.equal(a | 0, Vector(1,2,3))
-      end)
+        it('implements __bxor', function()
+          assert.equal(a | 0, Vector(0,0,0))
+        end)
 
-      it('implements __bxor', function()
-        assert.equal(a | 0, Vector(0,0,0))
-      end)
+        it('implements __shl', function()
+          assert.equal(a << 1, Vector(0,0,0))
+        end)
 
-      it('implements __shl', function()
-        assert.equal(a << 1, Vector(0,0,0))
-      end)
+        it('implements __shr', function()
+          assert.equal(a >> 1, Vector(0,0,0))
+        end)
 
-      it('implements __shr', function()
-        assert.equal(a >> 1, Vector(0,0,0))
-      end)
-
-      it('implements __bnot', function()
-        assert.equal(~a, Vector(0,0,0))
-      end)
-
+        it('implements __bnot', function()
+          assert.equal(~a, Vector(0,0,0))
+        end)
+      ]])
     end
 
     describe('Inherited Metamethods', function()
@@ -204,15 +206,15 @@ describe('Metamethods', function()
       end)
 
       it('implements __add', function()
-        assert.equal(c+d, Vector(3,6,9))
+        assert.equal(c+d, Vector2(3,6,9))
       end)
 
       it('implements __sub', function()
-        assert.equal(d-c, Vector(1,2,3))
+        assert.equal(d-c, Vector2(1,2,3))
       end)
 
       it('implements __div', function()
-        assert.equal(d/2, Vector(1,2,3))
+        assert.equal(d/2, Vector2(1,2,3))
       end)
 
       it('implements __concat', function()
@@ -224,11 +226,11 @@ describe('Metamethods', function()
       end)
 
       it('implements __pow', function()
-        assert.equal(c^d, Vector(0,0,0))
+        assert.equal(c^d, Vector2(0,0,0))
       end)
 
       it('implements __mul', function()
-        assert.equal(4*c, Vector(4,8,12))
+        assert.equal(4*c, Vector2(4,8,12))
       end)
 
       if is_lua_5_2_compatible() then
