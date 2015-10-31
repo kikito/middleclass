@@ -34,7 +34,7 @@ describe('Metamethods', function()
         if type(a)=="number" then return b.class:new(a*b.x, a*b.y, a*b.z) end
       end
 
-      if is_lua_5_2_compatible then
+      if is_lua_5_2_compatible() then
         function Vector.__len(a)    return 3 end
         function Vector.__pairs(a)
           local t = {x=a.x,y=a.y,z=a.z}
@@ -54,7 +54,7 @@ describe('Metamethods', function()
         end
       end
 
-      if is_lua_5_3_compatible then
+      if is_lua_5_3_compatible() then
         function Vector.__gc(a)
           b.x, b.y, b.z = a.x, a.y, a.z
         end
