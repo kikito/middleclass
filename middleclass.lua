@@ -98,7 +98,7 @@ end
 local Object = _createClass("Object", nil)
 
 Object.static.__metamethods = { '__add', '__band', '__bor', '__bxor', '__bnot', '__call', '__concat', '__div', '__eq',
-                                '__gc', '__ipairs', '__idiv', '__le', '__len', '__lt', '__metatable', '__mod', '__mode',
+                                '__ipairs', '__idiv', '__le', '__len', '__lt', '__metatable', '__mod', '__mode',
                                 '__mul', '__pairs', '__pow', '__sh1', '__shr', '__sub', '__tostring', '__unm' }
 
 function Object.static:allocate()
