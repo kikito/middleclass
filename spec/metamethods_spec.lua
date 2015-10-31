@@ -20,38 +20,50 @@ describe('Metamethods', function()
       function Vector.__eq(a,b)     return a.x==b.x and a.y==b.y and a.z==b.z end
       function Vector.__lt(a,b)     return a() < b() end
       function Vector.__le(a,b)     return a() <= b() end
-      function Vector.__add(a,b)    return Vector:new(a.x+b.x, a.y+b.y ,a.z+b.z) end
-      function Vector.__sub(a,b)    return Vector:new(a.x-b.x, a.y-b.y, a.z-b.z) end
-      function Vector.__div(a,s)    return Vector:new(a.x/s, a.y/s, a.z/s) end
-      function Vector.__unm(a)      return Vector:new(-a.x, -a.y, -a.z) end
+      function Vector.__add(a,b)    return a.class:new(a.x+b.x, a.y+b.y ,a.z+b.z) end
+      function Vector.__sub(a,b)    return a.class:new(a.x-b.x, a.y-b.y, a.z-b.z) end
+      function Vector.__div(a,s)    return a.class:new(a.x/s, a.y/s, a.z/s) end
+      function Vector.__unm(a)      return a.class:new(-a.x, -a.y, -a.z) end
       function Vector.__concat(a,b) return a.x*b.x+a.y*b.y+a.z*b.z end
       function Vector.__call(a)     return math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z) end
       function Vector.__pow(a,b)
         return Vector:new(a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x)
       end
       function Vector.__mul(a,b)
-        if type(b)=="number" then return Vector:new(a.x*b, a.y*b, a.z*b) end
-        if type(a)=="number" then return Vector:new(a*b.x, a*b.y, a*b.z) end
+        if type(b)=="number" then return a.class:new(a.x*b, a.y*b, a.z*b) end
+        if type(a)=="number" then return b.class:new(a*b.x, a*b.y, a*b.z) end
       end
-      function Vector.__len(a)    return 3 end
-      function Vector.__pairs(a)
-        local t = {x=a.x,y=a.y,z=a.z}
-        return coroutine.wrap(function()
-            for k,v in pairs(t) do
-              coroutine.yield(k,v)
-            end
-          end)
+
+      if is_lua_5_2_compatible then
+        function Vector.__len(a)    return 3 end
+        function Vector.__pairs(a)
+          local t = {x=a.x,y=a.y,z=a.z}
+          return coroutine.wrap(function()
+              for k,v in pairs(t) do
+                coroutine.yield(k,v)
+              end
+            end)
+        end
+        function Vector.__ipairs(a)
+          local t = {a.x,a.y,a.z}
+          return coroutine.wrap(function()
+              for k,v in ipairs(t) do
+                coroutine.yield(k,v)
+              end
+            end)
+        end
       end
-      function Vector.__ipairs(a)
-        local t = {a.x,a.y,a.z}
-        return coroutine.wrap(function()
-            for k,v in ipairs(t) do
-              coroutine.yield(k,v)
-            end
-          end)
-      end
-      function Vector.__gc(a)
-        b.x, b.y, b.z = a.x, a.y, a.z
+
+      if is_lua_5_3_compatible then
+        function Vector.__gc(a)
+          b.x, b.y, b.z = a.x, a.y, a.z
+        end
+        function Vector.__band(a,n) return a.class:new(a.x & n, a.y & n, a.z & n) end
+        function Vector.__bor(a,n)  return a.class:new(a.x | n, a.y | n, a.z | n) end
+        function Vector.__bxor(a,n) return a.class:new(a.x ~ n, a.y ~ n, a.z ~ n) end
+        function Vector.__shl(a,n)  return a.class:new(a.x << n, a.y << n, a.z << n) end
+        function Vector.__shr(a,n)  return a.class:new(a.x >> n, a.y >> n, a.z >> n) end
+        function Vector.__bnot(a)   return a.class:new(~a.x, ~a.y, ~a.z) end
       end
 
       a = Vector:new(1,2,3)
@@ -109,7 +121,6 @@ describe('Metamethods', function()
     --]]
 
     if is_lua_5_2_compatible() then
-
       it('implements __len', function()
         assert.equal(#a, 3)
       end)
@@ -132,11 +143,37 @@ describe('Metamethods', function()
     end
 
     if is_lua_5_3_compatible() then
+
       it('implements __gc', function()
         a = nil
         collectgarbage()
         assert.are.same({b.x, b.y, b.z}, {1,2,3})
       end)
+
+      it('implements __band', function()
+        assert.equal(a & 1, Vector(1,1,1))
+      end)
+
+      it('implements __bor', function()
+        assert.equal(a | 0, Vector(1,2,3))
+      end)
+
+      it('implements __bxor', function()
+        assert.equal(a | 0, Vector(0,0,0))
+      end)
+
+      it('implements __shl', function()
+        assert.equal(a << 1, Vector(0,0,0))
+      end)
+
+      it('implements __shr', function()
+        assert.equal(a >> 1, Vector(0,0,0))
+      end)
+
+      it('implements __bnot', function()
+        assert.equal(~a, Vector(0,0,0))
+      end)
+
     end
 
     describe('Inherited Metamethods', function()
