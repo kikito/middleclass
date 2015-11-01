@@ -9,8 +9,15 @@ local function is_lua_5_3_compatible()
   return type(string.unpack) == 'function'
 end
 
-describe('Metamethods', function()
+if is_lua_5_2_compatible() then
+  require 'spec/metamethods_lua_5_2'
+end
 
+if is_lua_5_3_compatible() then
+  require 'spec.metamethods_lua_5_3'
+end
+
+describe('Metamethods', function()
   describe('Custom Metamethods', function()
     local Vector, a, b
     before_each(function()
@@ -32,40 +39,6 @@ describe('Metamethods', function()
       function Vector.__mul(a,b)
         if type(b)=="number" then return a.class:new(a.x*b, a.y*b, a.z*b) end
         if type(a)=="number" then return b.class:new(a*b.x, a*b.y, a*b.z) end
-      end
-
-      if is_lua_5_2_compatible() then
-        function Vector.__len(a)    return 3 end
-        function Vector.__pairs(a)
-          local t = {x=a.x,y=a.y,z=a.z}
-          return coroutine.wrap(function()
-              for k,v in pairs(t) do
-                coroutine.yield(k,v)
-              end
-            end)
-        end
-        function Vector.__ipairs(a)
-          local t = {a.x,a.y,a.z}
-          return coroutine.wrap(function()
-              for k,v in ipairs(t) do
-                coroutine.yield(k,v)
-              end
-            end)
-        end
-      end
-
-      if is_lua_5_3_compatible() then
-        eval([[
-          function Vector.__gc(a)
-            b.x, b.y, b.z = a.x, a.y, a.z
-          end
-          function Vector.__band(a,n) return a.class:new(a.x & n, a.y & n, a.z & n) end
-          function Vector.__bor(a,n)  return a.class:new(a.x | n, a.y | n, a.z | n) end
-          function Vector.__bxor(a,n) return a.class:new(a.x ~ n, a.y ~ n, a.z ~ n) end
-          function Vector.__shl(a,n)  return a.class:new(a.x << n, a.y << n, a.z << n) end
-          function Vector.__shr(a,n)  return a.class:new(a.x >> n, a.y >> n, a.z >> n) end
-          function Vector.__bnot(a)   return a.class:new(~a.x, ~a.y, ~a.z) end
-        ]])
       end
 
       a = Vector:new(1,2,3)
@@ -122,65 +95,8 @@ describe('Metamethods', function()
     end)
     --]]
 
-    if is_lua_5_2_compatible() then
-      it('implements __len', function()
-        assert.equal(#a, 3)
-      end)
-
-      it('implements __pairs',function()
-        local output = {}
-        for k,v in pairs(a) do
-          output[k] = v
-        end
-        assert.are.same(output,{x=1,y=2,z=3})
-      end)
-
-      it('implements __ipairs',function()
-        local output = {}
-        for _,i in ipairs(a) do
-          output[#output+1] = i
-        end
-        assert.are.same(output,{1,2,3})
-      end)
-    end
-
-    if is_lua_5_3_compatible() then
-      eval([[
-        it('implements __gc', function()
-          a = nil
-          collectgarbage()
-          assert.are.same({b.x, b.y, b.z}, {1,2,3})
-        end)
-
-        it('implements __band', function()
-          assert.equal(a & 1, Vector(1,1,1))
-        end)
-
-        it('implements __bor', function()
-          assert.equal(a | 0, Vector(1,2,3))
-        end)
-
-        it('implements __bxor', function()
-          assert.equal(a | 0, Vector(0,0,0))
-        end)
-
-        it('implements __shl', function()
-          assert.equal(a << 1, Vector(0,0,0))
-        end)
-
-        it('implements __shr', function()
-          assert.equal(a >> 1, Vector(0,0,0))
-        end)
-
-        it('implements __bnot', function()
-          assert.equal(~a, Vector(0,0,0))
-        end)
-      ]])
-    end
-
     describe('Inherited Metamethods', function()
       local Vector2, c, d
-
       before_each(function()
         Vector2= class('Vector2', Vector)
         function Vector2:initialize(x,y,z) Vector.initialize(self,x,y,z) end
@@ -232,37 +148,6 @@ describe('Metamethods', function()
       it('implements __mul', function()
         assert.equal(4*c, Vector2(4,8,12))
       end)
-
-      if is_lua_5_2_compatible() then
-
-        it('implements __len', function()
-          assert.equal(#c, 3)
-        end)
-
-        it('implements __pairs',function()
-          local output = {}
-          for k,v in pairs(c) do
-            output[k] = v
-          end
-          assert.are.same(output,{x=1,y=2,z=3})
-        end)
-
-        it('implements __ipairs',function()
-          local output = {}
-          for _,i in ipairs(c) do
-            output[#output+1] = i
-          end
-          assert.are.same(output,{1,2,3})
-        end)
-      end
-
-      if is_lua_5_3_compatible() then
-        it('implements __gc', function()
-          c = nil
-          collectgarbage()
-          assert.are.same({b.x, b.y, b.z}, {1,2,3})
-        end)
-      end
     end)
   end)
 
