@@ -2,7 +2,7 @@ package = "middleclass"
 version = "3.1-0"
 source = {
   url = "https://github.com/kikito/middleclass/archive/v3.1.0.tar.gz",
-  dir = "middleclass-3.0.0"
+  dir = "middleclass-3.1.0"
 }
 description = {
    summary = "A simple OOP library for Lua",
