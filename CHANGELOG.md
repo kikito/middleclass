@@ -1,6 +1,10 @@
 middleclass changelog
 ====================
 
+Version 3.1.0
+
+* Added Lua 5.3 metamethod support (`__band`, `__bor`, `__bxor`, `__shl`, `__bnot`)
+
 Version 3.0.1
 
 * Added `__len`, `__ipairs` and `__pairs` metamethods for Lua 5.2
