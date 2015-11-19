@@ -35,7 +35,7 @@ local function _setClassDictionariesMetatables(aClass)
   local super = aClass.super
   if super then
     local superStatic = super.static
-    setmetatable(dict, super.__instanceDict)
+    setmetatable(dict, { __index = super.__instanceDict })
     setmetatable(aClass.static, { __index = function(_,k) return rawget(dict,k) or superStatic[k] end })
   else
     setmetatable(aClass.static, { __index = function(_,k) return dict[k] end })
@@ -43,8 +43,9 @@ local function _setClassDictionariesMetatables(aClass)
 end
 
 local all_metamethods_list = { '__add', '__band', '__bor', '__bxor', '__bnot', '__call', '__concat',
-                               '__div', '__eq', '__ipairs', '__idiv', '__le', '__len', '__lt', '__mod',
-                               '__mul', '__pairs', '__pow', '__shl', '__shr', '__sub', '__tostring', '__unm' }
+                               '__div', '__eq', '__gc', '__ipairs', '__idiv', '__le', '__len', '__lt',
+                               '__metatable', '__mod', '__mode', '__mul', '__pairs', '__pow', '__shl',
+                               '__shr', '__sub', '__tostring', '__unm' }
 
 local all_metamethods = {}
 
