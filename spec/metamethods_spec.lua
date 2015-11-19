@@ -171,7 +171,6 @@ describe('Metamethods', function()
 
     describe('An instance', function()
       it('has a tostring metamethod, returning a different result from Object.__tostring', function()
-        assert.not_equal(Peter.__tostring, Object.__tostring)
         assert.equal(tostring(peter), 'instance of class Peter')
       end)
     end)

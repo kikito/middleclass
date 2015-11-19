@@ -42,17 +42,51 @@ local function _setClassDictionariesMetatables(aClass)
   end
 end
 
+local all_metamethods_list = { '__add', '__band', '__bor', '__bxor', '__bnot', '__call', '__concat',
+                               '__div', '__eq', '__ipairs', '__idiv', '__le', '__len', '__lt', '__mod',
+                               '__mul', '__pairs', '__pow', '__shl', '__shr', '__sub', '__tostring', '__unm' }
+
+local all_metamethods = {}
+
+for _, metamethod in ipairs(all_metamethods_list) do
+  all_metamethods[metamethod] = true
+end
+
+local function _propogateMetamethod(aClass, key, value)
+  for subclass in pairs(aClass.subclasses) do
+    if not subclass.__metamethods[key] then
+      subclass.__instanceDict[key] = value
+      _propogateMetamethod(subclass, key, value)
+    end
+  end
+end
+
+local function _updateClassDict(aClass, key, value)
+  if all_metamethods[key] then
+    if value == nil then
+      aClass.__metamethods[key] = nil
+      value = aClass.super and aClass.super.__instanceDict[key]
+    else
+      aClass.__metamethods[key] = true
+    end
+
+    _propogateMetamethod(aClass, key, value)
+  end
+
+  aClass.__instanceDict[key] = value
+end
+
 local function _setClassMetatable(aClass)
   setmetatable(aClass, {
     __tostring = function() return "class " .. aClass.name end,
     __index    = aClass.static,
-    __newindex = aClass.__instanceDict,
+    __newindex = _updateClassDict,
     __call     = function(self, ...) return self:new(...) end
   })
 end
 
 local function _createClass(name, super)
-  local aClass = { name = name, super = super, static = {}, __mixins = {}, __instanceDict={} }
+  local aClass = { name = name, super = super, static = {}, __mixins = {}, __instanceDict = {}, __metamethods = {} }
   aClass.subclasses = setmetatable({}, {__mode = "k"})
 
   _setClassDictionariesMetatables(aClass)
@@ -61,17 +95,9 @@ local function _createClass(name, super)
   return aClass
 end
 
-local function _createLookupMetamethod(aClass, name)
-  return function(...)
-    local method = aClass.super[name]
-    assert( type(method)=='function', tostring(aClass) .. " doesn't implement metamethod '" .. name .. "'" )
-    return method(...)
-  end
-end
-
-local function _setClassMetamethods(aClass)
-  for _,m in ipairs(aClass.__metamethods) do
-    aClass[m]= _createLookupMetamethod(aClass, m)
+local function _setSubclassMetamethods(aClass, subclass)
+  for m in pairs(aClass.__metamethods) do
+    subclass.__instanceDict[m] = aClass.__instanceDict[m]
   end
 end
 
@@ -97,10 +123,6 @@ end
 
 local Object = _createClass("Object", nil)
 
-Object.static.__metamethods = { '__add', '__band', '__bor', '__bxor', '__bnot', '__call', '__concat',
-                                '__div', '__eq', '__ipairs', '__idiv', '__le', '__len', '__lt', '__mod',
-                                '__mul', '__pairs', '__pow', '__shl', '__shr', '__sub', '__tostring', '__unm' }
-
 function Object.static:allocate()
   assert(type(self) == 'table', "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
   return setmetatable({ class = self }, self.__instanceDict)
@@ -117,7 +139,7 @@ function Object.static:subclass(name)
   assert(type(name) == "string", "You must provide a name(string) for your class")
 
   local subclass = _createClass(name, self)
-  _setClassMetamethods(subclass)
+  _setSubclassMetamethods(self, subclass)
   _setDefaultInitializeMethod(subclass, self)
   self.subclasses[subclass] = true
   self:subclassed(subclass)
