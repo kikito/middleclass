@@ -41,6 +41,7 @@ describe('Metamethods', function()
         if type(a)=="number" then return b.class:new(a*b.x, a*b.y, a*b.z) end
       end
       Vector.__metatable = "metatable of a vector"
+      Vector.__mode = "k"
 
       a = Vector:new(1,2,3)
       b = Vector:new(2,4,6)
@@ -92,6 +93,12 @@ describe('Metamethods', function()
 
     it('implements __metatable', function()
       assert.equal("metatable of a vector", getmetatable(a))
+    end)
+
+    it('implements __mode', function()
+      a[{}] = true
+      collectgarbage()
+      for k in pairs(a) do assert.not_table(k) end
     end)
 
     --[[
@@ -156,6 +163,12 @@ describe('Metamethods', function()
 
       it('implements __metatable', function()
         assert.equal("metatable of a vector", getmetatable(c))
+      end)
+
+      it('implements __mode', function()
+        c[{}] = true
+        collectgarbage()
+        for k in pairs(c) do assert.not_table(k) end
       end)
 
       describe('Updates', function()
