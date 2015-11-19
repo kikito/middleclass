@@ -6,7 +6,7 @@ local before_each = require('busted').before_each
 local assert = require('busted').assert
 
 describe('Lua 5.3 Metamethods', function()
-  local Vector, a, b
+  local Vector, a, b, last_gc
   before_each(function()
     Vector= class('Vector')
     function Vector.initialize(a,x,y,z) a.x, a.y, a.z = x,y,z end
@@ -21,7 +21,7 @@ describe('Lua 5.3 Metamethods', function()
     end
     function Vector.__len(a)    return 3 end
 
-    function Vector.__gc(a) b.x, b.y, b.z = a.x, a.y, a.z end
+    function Vector.__gc(a) last_gc = {a.class.name, a.x, a.y, a.z} end
     function Vector.__band(a,n) return a.class:new(a.x & n, a.y & n, a.z & n) end
     function Vector.__bor(a,n)  return a.class:new(a.x | n, a.y | n, a.z | n) end
     function Vector.__bxor(a,n) return a.class:new(a.x ~ n, a.y ~ n, a.z ~ n) end
@@ -34,9 +34,10 @@ describe('Lua 5.3 Metamethods', function()
   end)
 
   it('implements __gc', function()
+    collectgarbage()
     a = nil
     collectgarbage()
-    assert.are.same({b.x, b.y, b.z}, {1,2,3})
+    assert.are.same(last_gc, {"Vector",1,2,3})
   end)
 
   it('implements __band', function()
@@ -74,9 +75,10 @@ describe('Lua 5.3 Metamethods', function()
     end)
 
     it('implements __gc', function()
+      collectgarbage()
       c = nil
       collectgarbage()
-      assert.are.same({b.x, b.y, b.z}, {1,2,3})
+      assert.are.same(last_gc, {"Vector2",1,2,3})
     end)
 
     it('implements __band', function()
