@@ -148,6 +148,30 @@ describe('Metamethods', function()
       it('implements __mul', function()
         assert.equal(4*c, Vector2(4,8,12))
       end)
+
+      describe('Updates', function()
+        it('overrides __add', function()
+          Vector2.__add = function(a, b) return Vector.__add(a, b)/2 end
+          assert.equal(c+d, Vector2(1.5,3,4.5))
+        end)
+
+        it('updates __add', function()
+          Vector.__add = Vector.__sub
+          assert.equal(c+d, Vector2(-1,-2,-3))
+        end)
+
+        it('does not update __add after overriding', function()
+          Vector2.__add = function(a, b) return Vector.__add(a, b)/2 end
+          Vector.__add = Vector.__sub
+          assert.equal(c+d, Vector2(-0.5,-1,-1.5))
+        end)
+
+        it('reverts __add override', function()
+          Vector2.__add = function(a, b) return Vector.__add(a, b)/2 end
+          Vector2.__add = nil
+          assert.equal(c+d, Vector2(3,6,9))
+        end)
+      end)
     end)
   end)
 
