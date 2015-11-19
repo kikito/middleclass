@@ -40,6 +40,7 @@ describe('Metamethods', function()
         if type(b)=="number" then return a.class:new(a.x*b, a.y*b, a.z*b) end
         if type(a)=="number" then return b.class:new(a*b.x, a*b.y, a*b.z) end
       end
+      Vector.__metatable = "metatable of a vector"
 
       a = Vector:new(1,2,3)
       b = Vector:new(2,4,6)
@@ -87,6 +88,10 @@ describe('Metamethods', function()
 
     it('implements __mul', function()
       assert.equal(4*a, Vector(4,8,12))
+    end)
+
+    it('implements __metatable', function()
+      assert.equal("metatable of a vector", getmetatable(a))
     end)
 
     --[[
@@ -147,6 +152,10 @@ describe('Metamethods', function()
 
       it('implements __mul', function()
         assert.equal(4*c, Vector2(4,8,12))
+      end)
+
+      it('implements __metatable', function()
+        assert.equal("metatable of a vector", getmetatable(c))
       end)
 
       describe('Updates', function()
