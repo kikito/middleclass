@@ -97,7 +97,7 @@ local function _createClass(name, super)
 end
 
 local function _setSubclassMetamethods(aClass, subclass)
-  for m in pairs(aClass.__metamethods) do
+  for m in pairs(all_metamethods) do
     subclass.__instanceDict[m] = aClass.__instanceDict[m]
   end
 end

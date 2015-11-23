@@ -171,6 +171,13 @@ describe('Metamethods', function()
         for k in pairs(c) do assert.not_table(k) end
       end)
 
+      it('allows inheriting further', function()
+        local Vector3 = class('Vector3', Vector2)
+        local e = Vector3(1,2,3)
+        local f = Vector3(3,4,5)
+        assert.equal(e+f, Vector3(4,6,8))
+      end)
+
       describe('Updates', function()
         it('overrides __add', function()
           Vector2.__add = function(a, b) return Vector.__add(a, b)/2 end
