@@ -28,6 +28,13 @@ local middleclass = {
   ]]
 }
 
+local _metamethods = {}
+for m in ([[ add band bor bxor bnot call concat div eq
+             gc ipairs idiv le len lt metatable mod mode
+             mul pairs pow shl shr sub tostring unm ]]):gmatch("%S+") do
+  _metamethods['__' .. m] = true
+end
+
 local function _setClassDictionariesMetatables(aClass)
   local dict = aClass.__instanceDict
   dict.__index = dict
@@ -42,31 +49,22 @@ local function _setClassDictionariesMetatables(aClass)
   end
 end
 
-local all_metamethods_list = { '__add', '__band', '__bor', '__bxor', '__bnot', '__call', '__concat',
-                               '__div', '__eq', '__gc', '__ipairs', '__idiv', '__le', '__len', '__lt',
-                               '__metatable', '__mod', '__mode', '__mul', '__pairs', '__pow', '__shl',
-                               '__shr', '__sub', '__tostring', '__unm' }
-
-local all_metamethods = {}
-
-for _, metamethod in ipairs(all_metamethods_list) do
-  all_metamethods[metamethod] = true
-end
-
-local function _propagateMetamethod(aClass, key, value)
+local function _propagateMetamethod(aClass, name, f)
   for subclass in pairs(aClass.subclasses) do
-    if not subclass.__metamethods[key] then
-      subclass.__instanceDict[key] = value
-      _propagateMetamethod(subclass, key, value)
+    if not subclass.__metamethods[name] then
+      subclass.__instanceDict[name] = f
+      _propagateMetamethod(subclass, name, f)
     end
   end
 end
 
 local function _updateClassDict(aClass, key, value)
-  if all_metamethods[key] then
+  if _metamethods[key] then
     if value == nil then
       aClass.__metamethods[key] = nil
-      value = aClass.super and aClass.super.__instanceDict[key]
+      if aClass.super then
+        value = aClass.super.__instanceDict[key]
+      end
     else
       aClass.__metamethods[key] = true
     end
@@ -97,7 +95,7 @@ local function _createClass(name, super)
 end
 
 local function _setSubclassMetamethods(aClass, subclass)
-  for m in pairs(all_metamethods) do
+  for m in pairs(_metamethods) do
     subclass.__instanceDict[m] = aClass.__instanceDict[m]
   end
 end
