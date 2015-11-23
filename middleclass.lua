@@ -53,11 +53,11 @@ for _, metamethod in ipairs(all_metamethods_list) do
   all_metamethods[metamethod] = true
 end
 
-local function _propogateMetamethod(aClass, key, value)
+local function _propagateMetamethod(aClass, key, value)
   for subclass in pairs(aClass.subclasses) do
     if not subclass.__metamethods[key] then
       subclass.__instanceDict[key] = value
-      _propogateMetamethod(subclass, key, value)
+      _propagateMetamethod(subclass, key, value)
     end
   end
 end
@@ -71,7 +71,7 @@ local function _updateClassDict(aClass, key, value)
       aClass.__metamethods[key] = true
     end
 
-    _propogateMetamethod(aClass, key, value)
+    _propagateMetamethod(aClass, key, value)
   end
 
   aClass.__instanceDict[key] = value
