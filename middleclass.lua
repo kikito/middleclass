@@ -1,5 +1,5 @@
 local middleclass = {
-  _VERSION     = 'middleclass v3.1.0',
+  _VERSION     = 'middleclass v3.2.0',
   _DESCRIPTION = 'Object Orientation for Lua',
   _URL         = 'https://github.com/kikito/middleclass',
   _LICENSE     = [[

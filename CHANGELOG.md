@@ -1,6 +1,10 @@
 middleclass changelog
 ====================
 
+Version 3.2.0
+
+* Changed the way metamethods were handled to fix certain bugs (un-stubbed metamethods could not be inherited)
+
 Version 3.1.0
 
 * Added Lua 5.3 metamethod support (`__band`, `__bor`, `__bxor`, `__shl`, `__bnot`)
