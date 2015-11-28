@@ -229,11 +229,11 @@ describe('Metamethods', function()
         assert.equal(fallback.key, 'value')
       end)
 
-      it('does not use __newindex when field exists in class', function()
+      it('uses __newindex when field exists in class', function()
         p.common = 'value'
-        assert.equal(p.common, 'value')
+        assert.equal(p.common, 'class')
         assert.equal(Proxy.common, 'class')
-        assert.equal(fallback.common, 'fallback')
+        assert.equal(fallback.common, 'value')
       end)
     end)
 

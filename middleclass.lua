@@ -67,25 +67,9 @@ local function _createIndexWrapper(aClass, f)
   end
 end
 
-local function _createNewIndexWrapper(aClass, f)
-  if f ~= nil then
-    return function(self, key, value)
-      if aClass.__instanceDict[key] ~= nil then
-        rawset(self, key, value)
-      elseif type(f) == "function" then
-        f(self, key, value)
-      else
-        f[key] = value
-      end
-    end
-  end
-end
-
 local function _setMetamethod(aClass, name, f)
   if name == "__index" then
     f = _createIndexWrapper(aClass, f)
-  elseif name == "__newindex" then
-    f = _createNewIndexWrapper(aClass, f)
   end
 
   aClass.__instanceMeta[name] = f
@@ -125,15 +109,8 @@ local function _setClassMetatable(aClass)
 end
 
 local function _createClass(name, super)
-  local aClass = {
-    name = name,
-    super = super,
-    static = {},
-    subclasses = setmetatable({}, {__mode = "k"}),
-    __mixins = {},
-    __instanceDict = {},
-    __instanceMeta = {}
-  }
+  local aClass = { name = name, super = super, static = {}, __mixins = {}, __instanceDict = {}, __instanceMeta = {} }
+  aClass.subclasses = setmetatable({}, {__mode = "k"})
 
   _setClassDictionariesMetatables(aClass)
   _setClassMetatable(aClass)
