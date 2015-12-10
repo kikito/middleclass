@@ -30,14 +30,14 @@ local middleclass = {
 
 local _metamethods = {}
 for m in ([[ add band bor bxor bnot call concat div eq
-             gc ipairs idiv le len lt metatable mod mode
-             mul pairs pow shl shr sub tostring unm ]]):gmatch("%S+") do
+             gc index ipairs idiv le len lt metatable mod mode
+             mul newindex pairs pow shl shr sub tostring unm ]]):gmatch("%S+") do
   _metamethods['__' .. m] = true
 end
 
 local function _setClassDictionariesMetatables(aClass)
   local dict = aClass.__instanceDict
-  dict.__index = dict
+  aClass.__instanceMeta.__index = dict
 
   local super = aClass.super
   if super then
@@ -49,30 +49,54 @@ local function _setClassDictionariesMetatables(aClass)
   end
 end
 
+local function _createIndexWrapper(aClass, f)
+  if f == nil then
+    return aClass.__instanceDict
+  else
+    return function(self, key)
+      local value = aClass.__instanceDict[key]
+
+      if value ~= nil then
+        return value
+      elseif type(f) == "function" then
+        return (f(self, key))
+      else
+        return f[key]
+      end
+    end
+  end
+end
+
+local function _setMetamethod(aClass, name, f)
+  if name == "__index" then
+    f = _createIndexWrapper(aClass, f)
+  end
+
+  aClass.__instanceMeta[name] = f
+end
+
 local function _propagateMetamethod(aClass, name, f)
+  _setMetamethod(aClass, name, f)
+
   for subclass in pairs(aClass.subclasses) do
-    if not subclass.__metamethods[name] then
-      subclass.__instanceDict[name] = f
+    if rawget(subclass.__instanceDict, name) == nil then
       _propagateMetamethod(subclass, name, f)
     end
   end
 end
 
 local function _updateClassDict(aClass, key, value)
+  aClass.__instanceDict[key] = value
+
   if _metamethods[key] then
     if value == nil then
-      aClass.__metamethods[key] = nil
       if aClass.super then
         value = aClass.super.__instanceDict[key]
       end
-    else
-      aClass.__metamethods[key] = true
     end
 
     _propagateMetamethod(aClass, key, value)
   end
-
-  aClass.__instanceDict[key] = value
 end
 
 local function _setClassMetatable(aClass)
@@ -85,7 +109,7 @@ local function _setClassMetatable(aClass)
 end
 
 local function _createClass(name, super)
-  local aClass = { name = name, super = super, static = {}, __mixins = {}, __instanceDict = {}, __metamethods = {} }
+  local aClass = { name = name, super = super, static = {}, __mixins = {}, __instanceDict = {}, __instanceMeta = {} }
   aClass.subclasses = setmetatable({}, {__mode = "k"})
 
   _setClassDictionariesMetatables(aClass)
@@ -96,7 +120,7 @@ end
 
 local function _setSubclassMetamethods(aClass, subclass)
   for m in pairs(_metamethods) do
-    subclass.__instanceDict[m] = aClass.__instanceDict[m]
+    _setMetamethod(subclass, m, aClass.__instanceDict[m])
   end
 end
 
@@ -124,7 +148,7 @@ local Object = _createClass("Object", nil)
 
 function Object.static:allocate()
   assert(type(self) == 'table', "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
-  return setmetatable({ class = self }, self.__instanceDict)
+  return setmetatable({ class = self }, self.__instanceMeta)
 end
 
 function Object.static:new(...)
