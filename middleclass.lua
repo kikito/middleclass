@@ -109,7 +109,7 @@ local function _setClassMetatable(aClass)
 end
 
 local function _createClass(name, super)
-  local aClass = { name = name, super = super, static = {}, __mixins = {}, __instanceDict = {}, __instanceMeta = {} }
+  local aClass = { name = name, super = super, static = {}, __instanceDict = {}, __instanceMeta = {} }
   aClass.subclasses = setmetatable({}, {__mode = "k"})
 
   _setClassDictionariesMetatables(aClass)
@@ -141,7 +141,6 @@ local function _includeMixin(aClass, mixin)
     end
   end
   if type(mixin.included)=="function" then mixin:included(aClass) end
-  aClass.__mixins[mixin] = true
 end
 
 local Object = {
@@ -199,17 +198,6 @@ local Object = {
       assert(type(self) == 'table', "Make sure you that you are using 'Class:include' instead of 'Class.include'")
       for _,mixin in ipairs({...}) do _includeMixin(self, mixin) end
       return self
-    end,
-
-    includes = function(self, mixin)
-      return type(mixin)          == 'table' and
-             type(self)           == 'table' and
-             type(self.__mixins)  == 'table' and
-             ( self.__mixins[mixin] or
-               type(self.super)           == 'table' and
-               type(self.super.includes)  == 'function' and
-               self.super:includes(mixin)
-             )
     end
   }
 }
