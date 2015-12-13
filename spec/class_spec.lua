@@ -13,7 +13,7 @@ describe('class()', function()
     it('the resulting class has the correct name and Object as its superclass', function()
       local TheClass = class('TheClass')
       assert.equal(TheClass.name, 'TheClass')
-      assert.equal(TheClass.super, Object)
+      assert.is_nil(TheClass.super)
     end)
   end)
 

@@ -1,8 +1,10 @@
 local class = require 'middleclass'
-local Object = class.Object
 
-describe('Object', function()
-
+describe('Default methods', function()
+  local Object
+  before_each(function()
+    Object = class('Object')
+  end)
 
   describe('name', function()
     it('is correctly set', function()
@@ -163,12 +165,6 @@ describe('Object', function()
 
         local o1, o2, o3 = Class1:new(), Class2:new(), Class3:new()
 
-        it('isInstanceOf(Object)', function()
-          assert.is_true(o1:isInstanceOf(Object))
-          assert.is_true(o2:isInstanceOf(Object))
-          assert.is_true(o3:isInstanceOf(Object))
-        end)
-
         it('isInstanceOf its class', function()
           assert.is_true(o1:isInstanceOf(Class1))
           assert.is_true(o2:isInstanceOf(Class2))
@@ -240,12 +236,6 @@ describe('Object', function()
       local Class2 = class('Class2', Class1)
       local Class3 = class('Class3', Class2)
       local UnrelatedClass = class('Unrelated')
-
-      it('isSubclassOf(Object)', function()
-        assert.is_true(Class1:isSubclassOf(Object))
-        assert.is_true(Class2:isSubclassOf(Object))
-        assert.is_true(Class3:isSubclassOf(Object))
-      end)
 
       it('is subclassOf its direct superclass', function()
         assert.is_true(Class2:isSubclassOf(Class1))

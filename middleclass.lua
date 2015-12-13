@@ -144,80 +144,82 @@ local function _includeMixin(aClass, mixin)
   aClass.__mixins[mixin] = true
 end
 
-local Object = _createClass("Object", nil)
+local Object = {
+  __tostring   = function(self) return "instance of " .. tostring(self.class) end,
+  initialize   = function(self) end,
+  isInstanceOf = function(self, aClass)
+    return type(self)                == 'table' and
+           type(self.class)          == 'table' and
+           type(aClass)              == 'table' and
+           ( aClass == self.class or
+             type(aClass.isSubclassOf) == 'function' and
+             self.class:isSubclassOf(aClass)
+           )
+  end,
 
-function Object.static:allocate()
-  assert(type(self) == 'table', "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
-  return setmetatable({ class = self }, self.__instanceMeta)
-end
+  static = {
 
-function Object.static:new(...)
-  local instance = self:allocate()
-  instance:initialize(...)
-  return instance
-end
+    allocate = function(self)
+      assert(type(self) == 'table', "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
+      return setmetatable({ class = self }, self.__instanceMeta)
+    end,
 
-function Object.static:subclass(name)
-  assert(type(self) == 'table', "Make sure that you are using 'Class:subclass' instead of 'Class.subclass'")
-  assert(type(name) == "string", "You must provide a name(string) for your class")
+    new = function(self, ...)
+      local instance = self:allocate()
+      instance:initialize(...)
+      return instance
+    end,
 
-  local subclass = _createClass(name, self)
-  _setSubclassMetamethods(self, subclass)
-  _setDefaultInitializeMethod(subclass, self)
-  self.subclasses[subclass] = true
-  self:subclassed(subclass)
+    subclass = function(self, name)
+      assert(type(self) == 'table', "Make sure that you are using 'Class:subclass' instead of 'Class.subclass'")
+      assert(type(name) == "string", "You must provide a name(string) for your class")
 
+      local subclass = _createClass(name, self)
+      _setSubclassMetamethods(self, subclass)
+      _setDefaultInitializeMethod(subclass, self)
+      self.subclasses[subclass] = true
+      self:subclassed(subclass)
+
+      return subclass
+    end,
+
+    subclassed = function(self, other) end,
+
+    isSubclassOf = function(self, other)
+      return type(other)                   == 'table' and
+             type(self)                    == 'table' and
+             type(self.super)              == 'table' and
+             ( self.super == other or
+               type(self.super.isSubclassOf) == 'function' and
+               self.super:isSubclassOf(other)
+             )
+    end,
+
+    include = function(self, ...)
+      assert(type(self) == 'table', "Make sure you that you are using 'Class:include' instead of 'Class.include'")
+      for _,mixin in ipairs({...}) do _includeMixin(self, mixin) end
+      return self
+    end,
+
+    includes = function(self, mixin)
+      return type(mixin)          == 'table' and
+             type(self)           == 'table' and
+             type(self.__mixins)  == 'table' and
+             ( self.__mixins[mixin] or
+               type(self.super)           == 'table' and
+               type(self.super.includes)  == 'function' and
+               self.super:includes(mixin)
+             )
+    end
+  }
+}
+
+function middleclass.class(name, super)
+  assert(type(name) == 'string', "A name (string) is needed for the new class")
+  if super then return super:subclass(name) end
+  local subclass = _createClass(name)
+  _includeMixin(subclass, Object)
   return subclass
-end
-
-function Object.static:subclassed(other) end
-
-function Object.static:isSubclassOf(other)
-  return type(other)                   == 'table' and
-         type(self)                    == 'table' and
-         type(self.super)              == 'table' and
-         ( self.super == other or
-           type(self.super.isSubclassOf) == 'function' and
-           self.super:isSubclassOf(other)
-         )
-end
-
-function Object.static:include( ... )
-  assert(type(self) == 'table', "Make sure you that you are using 'Class:include' instead of 'Class.include'")
-  for _,mixin in ipairs({...}) do _includeMixin(self, mixin) end
-  return self
-end
-
-function Object.static:includes(mixin)
-  return type(mixin)          == 'table' and
-         type(self)           == 'table' and
-         type(self.__mixins)  == 'table' and
-         ( self.__mixins[mixin] or
-           type(self.super)           == 'table' and
-           type(self.super.includes)  == 'function' and
-           self.super:includes(mixin)
-         )
-end
-
-function Object:initialize() end
-
-function Object:__tostring() return "instance of " .. tostring(self.class) end
-
-function Object:isInstanceOf(aClass)
-  return type(self)                == 'table' and
-         type(self.class)          == 'table' and
-         type(aClass)              == 'table' and
-         ( aClass == self.class or
-           type(aClass.isSubclassOf) == 'function' and
-           self.class:isSubclassOf(aClass)
-         )
-end
-
-
-
-function middleclass.class(name, super, ...)
-  super = super or Object
-  return super:subclass(name, ...)
 end
 
 middleclass.Object = Object
