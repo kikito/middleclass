@@ -12,6 +12,8 @@ before_install:
   - pip install hererocks
   - hererocks base -r^ --$LUA
   - export PATH=$PATH:$PWD/base/bin # Add directory with all installed binaries to PATH
+
+install:
   - luarocks install busted
   - luarocks install luacov
   - luarocks install luacov-coveralls
