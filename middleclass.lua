@@ -1,5 +1,5 @@
 local middleclass = {
-  _VERSION     = 'middleclass v3.2.0',
+  _VERSION     = 'middleclass v4.0.0',
   _DESCRIPTION = 'Object Orientation for Lua',
   _URL         = 'https://github.com/kikito/middleclass',
   _LICENSE     = [[
@@ -28,20 +28,6 @@ local middleclass = {
   ]]
 }
 
-local function _setClassDictionariesMetatables(aClass)
-  local dict = aClass.__instanceDict
-  aClass.__instanceDict.__index = dict
-
-  local super = aClass.super
-  if super then
-    local superStatic = super.static
-    setmetatable(dict, { __index = super.__instanceDict })
-    setmetatable(aClass.static, { __index = function(_,k) return rawget(dict,k) or superStatic[k] end })
-  else
-    setmetatable(aClass.static, { __index = function(_,k) return dict[k] end })
-  end
-end
-
 local function _createIndexWrapper(aClass, f)
   if f == nil then
     return aClass.__instanceDict
@@ -61,7 +47,8 @@ local function _createIndexWrapper(aClass, f)
 end
 
 local function _propagateInstanceMethod(aClass, name, f)
-  aClass.__instanceDict[name] = name == "__index" and _createIndexWrapper(aClass, f) or f
+  f = name == "__index" and _createIndexWrapper(aClass, f) or f
+  aClass.__instanceDict[name] = f
 
   for subclass in pairs(aClass.subclasses) do
     if rawget(subclass.__declaredMethods, name) == nil then
@@ -80,62 +67,64 @@ local function _declareInstanceMethod(aClass, name, f)
   _propagateInstanceMethod(aClass, name, f)
 end
 
-local function _setClassMetatable(aClass)
-  setmetatable(aClass, {
-    __tostring = function() return "class " .. aClass.name end,
-    __index    = aClass.static,
-    __newindex = _declareInstanceMethod,
-    __call     = function(self, ...) return self:new(...) end
-  })
-end
+local function _tostring(self) return "class " .. self.name end
+local function _call(self, ...) return self:new(...) end
 
 local function _createClass(name, super)
-  local aClass = { name = name, super = super, static = {}, __instanceDict = {}, __declaredMethods = {} }
-  aClass.subclasses = setmetatable({}, {__mode = "k"})
+  local dict = {}
+  dict.__index = dict
 
-  _setClassDictionariesMetatables(aClass)
-  _setClassMetatable(aClass)
+  local aClass = { name = name, super = super, static = {},
+                   __instanceDict = dict, __declaredMethods = {},
+                   subclasses = setmetatable({}, {__mode='k'})  }
+
+  if super then
+    setmetatable(dict, { __index = super.__instanceDict })
+    setmetatable(aClass.static, { __index = function(_,k) return rawget(dict,k) or super.static[k] end })
+  else
+    setmetatable(aClass.static, { __index = function(_,k) return dict[k] end })
+  end
+
+  setmetatable(aClass, { __index = aClass.static, __tostring = _tostring,
+                         __call = _call, __newindex = _declareInstanceMethod })
 
   return aClass
 end
 
 local function _includeMixin(aClass, mixin)
-  assert(type(mixin)=='table', "mixin must be a table")
+  assert(type(mixin) == 'table', "mixin must be a table")
+
   for name,method in pairs(mixin) do
     if name ~= "included" and name ~= "static" then aClass[name] = method end
   end
-  if mixin.static then
-    for name,method in pairs(mixin.static) do
-      aClass.static[name] = method
-    end
+
+  for name,method in pairs(mixin.static or {}) do
+    aClass.static[name] = method
   end
+
   if type(mixin.included)=="function" then mixin:included(aClass) end
+  return aClass
 end
 
-local Object = {
+local DefaultMixin = {
   __tostring   = function(self) return "instance of " .. tostring(self.class) end,
 
   initialize   = function(self, ...) end,
 
   isInstanceOf = function(self, aClass)
-    return type(self)                == 'table' and
-           type(self.class)          == 'table' and
-           type(aClass)              == 'table' and
+    return type(self)       == 'table' and
+           type(self.class) == 'table' and
+           type(aClass)     == 'table' and
            ( aClass == self.class or
              type(aClass.isSubclassOf) == 'function' and
-             self.class:isSubclassOf(aClass)
-           )
+             self.class:isSubclassOf(aClass) )
   end,
 
   static = {
 
-    allocate = function(self)
-      assert(type(self) == 'table', "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
-      return setmetatable({ class = self }, self.__instanceDict)
-    end,
-
     new = function(self, ...)
-      local instance = self:allocate()
+      assert(type(self) == 'table', "Make sure that you are using 'Class:new' instead of 'Class.new'")
+      local instance = setmetatable({ class = self }, self.__instanceDict)
       instance:initialize(...)
       return instance
     end,
@@ -160,13 +149,12 @@ local Object = {
     subclassed = function(self, other) end,
 
     isSubclassOf = function(self, other)
-      return type(other)                   == 'table' and
-             type(self)                    == 'table' and
-             type(self.super)              == 'table' and
+      return type(other)      == 'table' and
+             type(self)       == 'table' and
+             type(self.super) == 'table' and
              ( self.super == other or
                type(self.super.isSubclassOf) == 'function' and
-               self.super:isSubclassOf(other)
-             )
+               self.super:isSubclassOf(other) )
     end,
 
     include = function(self, ...)
@@ -179,13 +167,8 @@ local Object = {
 
 function middleclass.class(name, super)
   assert(type(name) == 'string', "A name (string) is needed for the new class")
-  if super then return super:subclass(name) end
-  local subclass = _createClass(name)
-  _includeMixin(subclass, Object)
-  return subclass
+  return super and super:subclass(name) or _includeMixin(_createClass(name), DefaultMixin)
 end
-
-middleclass.Object = Object
 
 setmetatable(middleclass, { __call = function(_, ...) return middleclass.class(...) end })
 
