@@ -2,6 +2,7 @@ middleclass
 ===========
 
 [![Build Status](https://travis-ci.org/kikito/middleclass.png?branch=master)](https://travis-ci.org/kikito/middleclass)
+[![Coverage Status](https://coveralls.io/repos/kikito/middleclass/badge.svg?branch=master&service=github)](https://coveralls.io/github/kikito/middleclass?branch=master)
 
 A simple OOP library for Lua. It has inheritance, metamethods (operators), class variables and weak mixin support.
 
