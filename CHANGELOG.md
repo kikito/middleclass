@@ -1,6 +1,15 @@
 middleclass changelog
 ====================
 
+Version 4.0.0
+
+* Unified the method and metamethod lookup into a single algorithm
+* Added the capacity of setting up the `__index` metamethod in classes
+* Removed global `Object` (classes created with `class(<name>)` have no superclass now)
+* Removed default method `Class:implements(<mixin>)`
+* Removed default method `Class:allocate`
+* Renamed several internal functions
+
 Version 3.2.0
 
 * Changed the way metamethods were handled to fix certain bugs (un-stubbed metamethods could not be inherited)
