@@ -121,10 +121,14 @@ local DefaultMixin = {
   end,
 
   static = {
+    allocate = function(self)
+      assert(type(self) == 'table', "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
+      return setmetatable({ class = self }, self.__instanceDict)
+    end,
 
     new = function(self, ...)
       assert(type(self) == 'table', "Make sure that you are using 'Class:new' instead of 'Class.new'")
-      local instance = setmetatable({ class = self }, self.__instanceDict)
+      local instance = self:allocate()
       instance:initialize(...)
       return instance
     end,

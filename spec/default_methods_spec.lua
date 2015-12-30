@@ -68,7 +68,40 @@ describe('Default methods', function()
       function SubClass:initialize() self.mark=true end
     end)
 
-    describe('new', function()
+    describe('allocate', function()
+
+      it('allocates instances properly', function()
+        local instance = SubClass:allocate()
+        assert.equal(instance.class, SubClass)
+        assert.equal(tostring(instance), "instance of " .. tostring(SubClass))
+      end)
+
+      it('throws an error when used without the :', function()
+        assert.error(Object.allocate)
+      end)
+
+      it('does not call the initializer', function()
+        local allocated = SubClass:allocate()
+        assert.is_nil(allocated.mark)
+      end)
+
+      it('can be overriden', function()
+
+        local previousAllocate = SubClass.static.allocate
+
+        function SubClass.static:allocate()
+          local instance = previousAllocate(SubClass)
+          instance.mark = true
+          return instance
+        end
+
+        local allocated = SubClass:allocate()
+        assert.is_true(allocated.mark)
+      end)
+
+    end)
+
+   describe('new', function()
 
       it('initializes instances properly', function()
         local instance = SubClass:new()
