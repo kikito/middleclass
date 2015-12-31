@@ -2,6 +2,7 @@ middleclass
 ===========
 
 [![Build Status](https://travis-ci.org/kikito/middleclass.png?branch=master)](https://travis-ci.org/kikito/middleclass)
+[![Coverage Status](https://coveralls.io/repos/kikito/middleclass/badge.svg?branch=master&service=github)](https://coveralls.io/github/kikito/middleclass?branch=master)
 
 A simple OOP library for Lua. It has inheritance, metamethods (operators), class variables and weak mixin support.
 
@@ -39,6 +40,10 @@ Documentation
 
 See the [github wiki page](https://github.com/kikito/middleclass/wiki) for examples & documentation.
 
+You can read the `CHANGELOG.md` file to see what has changed on each version of this library.
+
+If you need help updating to a new middleclass version, read `UPDATING.md`.
+
 Installation
 ============
 
@@ -72,52 +77,4 @@ License
 
 Middleclass is distributed under the MIT license.
 
-Updating from 2.x
-=================
 
-Middleclass used to expose several global variables on the main scope. It does not do that anymore.
-
-`class` is now returned by `require 'middleclass'`, and it is not set globally. So you can do this:
-
-```lua
-local class = require 'middleclass'
-local MyClass = class('MyClass') -- works as before
-```
-
-`Object` is not a global variable any more. But you can get it from `class.Object`
-
-```lua
-local class = require 'middleclass'
-local Object = class.Object
-
-print(Object) -- prints 'class Object'
-```
-
-The public functions `instanceOf`, `subclassOf` and `includes` have been replaced by `Object.isInstanceOf`, `Object.static.isSubclassOf` and `Object.static.includes`.
-
-Prior to 3.x:
-
-```lua
-instanceOf(MyClass, obj)
-subclassOf(Object, aClass)
-includes(aMixin, aClass)
-```
-
-Since 3.x:
-
-```lua
-obj:isInstanceOf(MyClass)
-aClass:isSubclassOf(Object)
-aClass:includes(aMixin)
-```
-
-The 3.x code snippet will throw an error if `obj` is not an object, or if `aClass` is not a class (since they will not implement `isInstanceOf`, `isSubclassOf` or `includes`).
-If you are unsure of whether `obj` and `aClass` are an object or a class, you can use the methods in `Object`. They are prepared to work with random types, not just classes and instances:
-
-```lua
-Object.isInstanceOf(obj, MyClass)
-Object.isSubclassOf(aClass, Object)
-Object.includes(aClass, aMixin)
-```
-
-Notice that the parameter order is not the same now as it was in 2.x. Also note the change in naming: `isInstanceOf` instead of `instanceOf`, and `isSubclassOf` instead of `subclassOf`.

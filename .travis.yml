@@ -10,12 +10,19 @@ env:
 
 before_install:
   - pip install hererocks
-  - hererocks base -r^ --$LUA
-  - export PATH=$PATH:$PWD/base/bin # Add directory with all installed binaries to PATH
+  - hererocks lua_install -r^ --$LUA
+  - export PATH=$PATH:$PWD/lua_install/bin # Add directory with all installed binaries to PATH
+
+install:
   - luarocks install busted
+  - luarocks install luacov
+  - luarocks install luacov-coveralls
 
 script:
-  - busted -v
+  - busted --verbose --coverage
+
+after_success:
+  - luacov-coveralls --exclude $TRAVIS_BUILD_DIR/lua_install
 
 branches:
   except:
