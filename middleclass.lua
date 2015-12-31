@@ -79,10 +79,9 @@ local function _createClass(name, super)
                    subclasses = setmetatable({}, {__mode='k'})  }
 
   if super then
-    setmetatable(dict, { __index = super.__instanceDict })
     setmetatable(aClass.static, { __index = function(_,k) return rawget(dict,k) or super.static[k] end })
   else
-    setmetatable(aClass.static, { __index = function(_,k) return dict[k] end })
+    setmetatable(aClass.static, { __index = function(_,k) return rawget(dict,k) end })
   end
 
   setmetatable(aClass, { __index = aClass.static, __tostring = _tostring,
