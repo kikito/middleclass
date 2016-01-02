@@ -14,11 +14,13 @@ before_install:
   - export PATH=$PATH:$PWD/lua_install/bin # Add directory with all installed binaries to PATH
 
 install:
+  - luarocks install luacheck
   - luarocks install busted
   - luarocks install luacov
   - luarocks install luacov-coveralls
 
 script:
+  - luacheck --std max+busted *.lua spec
   - busted --verbose --coverage
 
 after_success:
