@@ -204,7 +204,7 @@ describe('Default methods', function()
         describe('A ' .. theType, function()
 
           local f1 = function() return Object.isSubclassOf(Object, primitive) end
-          local f2 = function() return Object.isSubclassOf(primitive, o) end
+          local f2 = function() return Object.isSubclassOf(primitive, Object:new()) end
           local f3 = function() return Object.isSubclassOf(primitive, primitive) end
 
           describe('does not throw errors', function()

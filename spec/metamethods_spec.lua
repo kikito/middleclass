@@ -1,5 +1,4 @@
 local class = require 'middleclass'
-local Object = class.Object
 
 local function is_lua_5_2_compatible()
   return type(rawlen) == 'function'
@@ -19,7 +18,7 @@ end
 
 describe('Metamethods', function()
   describe('Custom Metamethods', function()
-    local Vector, a, b
+    local Vector, v, w
     before_each(function()
       Vector= class('Vector')
       function Vector.initialize(a,x,y,z) a.x, a.y, a.z = x,y,z end
@@ -43,62 +42,62 @@ describe('Metamethods', function()
       Vector.__metatable = "metatable of a vector"
       Vector.__mode = "k"
 
-      a = Vector:new(1,2,3)
-      b = Vector:new(2,4,6)
+      v = Vector:new(1,2,3)
+      w = Vector:new(2,4,6)
     end)
 
     it('implements __tostring', function()
-      assert.equal(tostring(a), "Vector[1,2,3]")
+      assert.equal(tostring(v), "Vector[1,2,3]")
     end)
 
     it('implements __eq', function()
-      assert.equal(a, a)
+      assert.equal(v, v)
     end)
 
     it('implements __lt', function()
-      assert.is_true(a < b)
+      assert.is_true(v < w)
     end)
 
     it('implements __le', function()
-      assert.is_true(a <= b)
+      assert.is_true(v <= w)
     end)
 
     it('implements __add', function()
-      assert.equal(a+b, Vector(3,6,9))
+      assert.equal(v+w, Vector(3,6,9))
     end)
 
     it('implements __sub', function()
-      assert.equal(b-a, Vector(1,2,3))
+      assert.equal(w-v, Vector(1,2,3))
     end)
 
     it('implements __div', function()
-      assert.equal(b/2, Vector(1,2,3))
+      assert.equal(w/2, Vector(1,2,3))
     end)
 
     it('implements __concat', function()
-      assert.equal(a..b, 28)
+      assert.equal(v..w, 28)
     end)
 
     it('implements __call', function()
-      assert.equal(a(), math.sqrt(14))
+      assert.equal(v(), math.sqrt(14))
     end)
 
     it('implements __pow', function()
-      assert.equal(a^b, Vector(0,0,0))
+      assert.equal(v^w, Vector(0,0,0))
     end)
 
     it('implements __mul', function()
-      assert.equal(4*a, Vector(4,8,12))
+      assert.equal(4*v, Vector(4,8,12))
     end)
 
     it('implements __metatable', function()
-      assert.equal("metatable of a vector", getmetatable(a))
+      assert.equal("metatable of a vector", getmetatable(v))
     end)
 
     it('implements __mode', function()
-      a[{}] = true
+      v[{}] = true
       collectgarbage()
-      for k in pairs(a) do assert.not_table(k) end
+      for k in pairs(v) do assert.not_table(k) end
     end)
 
     --[[
@@ -108,97 +107,97 @@ describe('Metamethods', function()
     --]]
 
     describe('Inherited Metamethods', function()
-      local Vector2, c, d
+      local Vector2, v2, w2
       before_each(function()
         Vector2= class('Vector2', Vector)
         function Vector2:initialize(x,y,z) Vector.initialize(self,x,y,z) end
 
-        c = Vector2:new(1,2,3)
-        d = Vector2:new(2,4,6)
+        v2 = Vector2:new(1,2,3)
+        w2 = Vector2:new(2,4,6)
       end)
 
       it('implements __tostring', function()
-        assert.equal(tostring(c), "Vector2[1,2,3]")
+        assert.equal(tostring(v2), "Vector2[1,2,3]")
       end)
 
       it('implements __eq', function()
-        assert.equal(c, c)
+        assert.equal(v2, v2)
       end)
 
       it('implements __lt', function()
-        assert.is_true(c < d)
+        assert.is_true(v2 < w2)
       end)
 
       it('implements __le', function()
-        assert.is_true(c <= d)
+        assert.is_true(v2 <= w2)
       end)
 
       it('implements __add', function()
-        assert.equal(c+d, Vector2(3,6,9))
+        assert.equal(v2+w2, Vector2(3,6,9))
       end)
 
       it('implements __sub', function()
-        assert.equal(d-c, Vector2(1,2,3))
+        assert.equal(w2-v2, Vector2(1,2,3))
       end)
 
       it('implements __div', function()
-        assert.equal(d/2, Vector2(1,2,3))
+        assert.equal(w2/2, Vector2(1,2,3))
       end)
 
       it('implements __concat', function()
-        assert.equal(c..d, 28)
+        assert.equal(v2..w2, 28)
       end)
 
       it('implements __call', function()
-        assert.equal(c(), math.sqrt(14))
+        assert.equal(v2(), math.sqrt(14))
       end)
 
       it('implements __pow', function()
-        assert.equal(c^d, Vector2(0,0,0))
+        assert.equal(v2^w2, Vector2(0,0,0))
       end)
 
       it('implements __mul', function()
-        assert.equal(4*c, Vector2(4,8,12))
+        assert.equal(4*v2, Vector2(4,8,12))
       end)
 
       it('implements __metatable', function()
-        assert.equal("metatable of a vector", getmetatable(c))
+        assert.equal("metatable of a vector", getmetatable(v2))
       end)
 
       it('implements __mode', function()
-        c[{}] = true
+        v2[{}] = true
         collectgarbage()
-        for k in pairs(c) do assert.not_table(k) end
+        for k in pairs(v2) do assert.not_table(k) end
       end)
 
       it('allows inheriting further', function()
         local Vector3 = class('Vector3', Vector2)
-        local e = Vector3(1,2,3)
-        local f = Vector3(3,4,5)
-        assert.equal(e+f, Vector3(4,6,8))
+        local v3 = Vector3(1,2,3)
+        local w3 = Vector3(3,4,5)
+        assert.equal(v3+w3, Vector3(4,6,8))
       end)
 
       describe('Updates', function()
         it('overrides __add', function()
           Vector2.__add = function(a, b) return Vector.__add(a, b)/2 end
-          assert.equal(c+d, Vector2(1.5,3,4.5))
+          assert.equal(v2+w2, Vector2(1.5,3,4.5))
         end)
 
         it('updates __add', function()
           Vector.__add = Vector.__sub
-          assert.equal(c+d, Vector2(-1,-2,-3))
+          assert.equal(v2+w2, Vector2(-1,-2,-3))
         end)
 
         it('does not update __add after overriding', function()
           Vector2.__add = function(a, b) return Vector.__add(a, b)/2 end
           Vector.__add = Vector.__sub
-          assert.equal(c+d, Vector2(-0.5,-1,-1.5))
+          assert.equal(v2+w2, Vector2(-0.5,-1,-1.5))
         end)
 
         it('reverts __add override', function()
           Vector2.__add = function(a, b) return Vector.__add(a, b)/2 end
           Vector2.__add = nil
-          assert.equal(c+d, Vector2(3,6,9))
+          assert.equal(v2+w2, Vector2(3,6,9))
         end)
       end)
     end)

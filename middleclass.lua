@@ -138,8 +138,8 @@ local DefaultMixin = {
 
       local subclass = _createClass(name, self)
 
-      for name, f in pairs(self.__instanceDict) do
-        _propagateInstanceMethod(subclass, name, f)
+      for methodName, f in pairs(self.__instanceDict) do
+        _propagateInstanceMethod(subclass, methodName, f)
       end
       subclass.initialize = function(instance, ...) return self.initialize(instance, ...) end
 

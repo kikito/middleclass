@@ -1,5 +1,4 @@
 local class = require 'middleclass'
-local Object = class.Object
 
 describe('class()', function()
 
