@@ -4,7 +4,7 @@ describe('class()', function()
 
   describe('when given no params', function()
     it('it throws an error', function()
-      assert.not_error(class)
+      assert.error(class)
     end)
   end)
 
