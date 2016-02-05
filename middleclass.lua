@@ -175,4 +175,18 @@ end
 
 setmetatable(middleclass, { __call = function(_, ...) return middleclass.class(...) end })
 
+
+function isObject(obj)
+  if type(obj) == 'table' then
+    local a = getmetatable(obj)
+    if a then
+      return a['initialize'] ~= nil
+    else
+      return false
+    end
+  else
+    return false
+  end
+end
+
 return middleclass
