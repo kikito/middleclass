@@ -12,7 +12,7 @@ local Object = class('Object')
 local MyClass = class('MyClass', Object)
 ```
 
-If you are using a library which depends on the internal implementation of middleclass (for example, [stateful.lua](https://github.com/kikito/stateful.lua) they might not work with middleclass 4.0. You might need to update those other libraries.
+If you are using a library which depends on the internal implementation of middleclass they might not work with middleclass 4.0. You might need to update those other libraries.
 
 Middleclass 4.0 comes with support for `__index` metamethod support. If your library manipulated the classes' `__instanceDict` internal attribute, you might do the same thing now using `__index` instead.
 
