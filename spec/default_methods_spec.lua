@@ -121,36 +121,16 @@ describe('Default methods', function()
 
     describe('isInstanceOf', function()
 
-      describe('nils, integers, strings, tables, and functions', function()
+      describe('primitives', function()
         local o = Object:new()
-        local primitives = {nil, 1, 'hello', {}, function() end}
+        local primitives = {nil, 1, 'hello', {}, function() end, Object:new()}
 
         for _,primitive in pairs(primitives) do
           local theType = type(primitive)
           describe('A ' .. theType, function()
-
-            local f1 = function() return Object.isInstanceOf(primitive, Object) end
-            local f2 = function() return Object.isInstanceOf(primitive, o) end
-            local f3 = function() return Object.isInstanceOf(primitive, primitive) end
-
-            describe('does not throw errors', function()
-              it('instanceOf(Object, '.. theType ..')', function()
-                assert.not_error(f1)
-              end)
-              it('instanceOf(' .. theType .. ', Object:new())', function()
-                assert.not_error(f2)
-              end)
-              it('instanceOf(' .. theType .. ',' .. theType ..')', function()
-                assert.not_error(f3)
-              end)
+            it('object:isInstanceOf(, '.. theType ..') returns false', function()
+              assert.is_false(o:isInstanceOf(primitive))
             end)
-
-            it('makes instanceOf return false', function()
-              assert.is_false(f1())
-              assert.is_false(f2())
-              assert.is_false(f3())
-            end)
-
           end)
         end
 
@@ -196,35 +176,17 @@ describe('Default methods', function()
 
   describe('isSubclassOf', function()
 
-    describe('nils, integers, etc', function()
+    it('returns false for instances', function()
+      assert.is_false(Object:isSubclassOf(Object:new()))
+    end)
+
+    describe('on primitives', function()
       local primitives = {nil, 1, 'hello', {}, function() end}
 
       for _,primitive in pairs(primitives) do
         local theType = type(primitive)
-        describe('A ' .. theType, function()
-
-          local f1 = function() return Object.isSubclassOf(Object, primitive) end
-          local f2 = function() return Object.isSubclassOf(primitive, Object:new()) end
-          local f3 = function() return Object.isSubclassOf(primitive, primitive) end
-
-          describe('does not throw errors', function()
-            it('isSubclassOf(Object, '.. theType ..')', function()
-              assert.not_error(f1)
-            end)
-            it('isSubclassOf(' .. theType .. ', Object:new())', function()
-              assert.not_error(f2)
-            end)
-            it('isSubclassOf(' .. theType .. ',' .. theType ..')', function()
-              assert.not_error(f3)
-            end)
-          end)
-
-          it('makes isSubclassOf return false', function()
-            assert.is_false(f1())
-            assert.is_false(f2())
-            assert.is_false(f3())
-          end)
-
+        it('returns false for ' .. theType, function()
+          assert.is_false(Object:isSubclassOf(primitive))
         end)
       end
 
