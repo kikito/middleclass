@@ -1,6 +1,11 @@
 middleclass changelog
 ====================
 
+Version 4.1.0
+
+* Simplifies implementation of `isInstanceOf` and `isSubclassOf`. They will now raise an error if their first
+  parameter (the `self`) isn't an instance or a class respectively.
+
 Version 4.0.0
 
 * Unified the method and metamethod lookup into a single algorithm
