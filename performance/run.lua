@@ -1,43 +1,56 @@
-local class = require 'middleclass'
+local iterations = 500000
 
-time = require 'performance/time'
+local time = function(preparation_str, test_str)
+  local code = ([[
+    %s
+    collectgarbage()
+    local startTime = os.clock()
+    for i=0,%d do
+      %s
+    end
+    local endTime = os.clock()
+    return endTime - startTime
+  ]]):format(preparation_str, iterations, test_str)
 
-time('class creation', function()
-  local A = class('A')
-end)
-
-local A = class('A')
-
-time('instance creation', function()
-  local a = A:new()
-end)
-
-function A:foo()
-  return 1
+  local loadstring = _G.loadstring or _G.load
+  return loadstring(code)()
 end
 
-local a = A:new()
+local time_lib = function(lib_path)
+  local pre = ([[
+    local class = require '%s'
 
-time('instance method invocation', function()
-  a:foo()
-end)
+    local A = class('A')
 
-local B = class('B', A)
+    function A:foo()
+      return 1
+    end
 
-local b = B:new()
+    function A.static:bar()
+      return 2
+    end
 
-time('inherited method invocation', function()
-  b:foo()
-end)
+    local B = class('B', A)
 
-function A.static:bar()
-  return 2
+    local a = A:new()
+    local b = B:new()
+  ]]):format(lib_path)
+
+  return {
+    class_creation          = time(pre, "class('A')"),
+    instance_creation       = time(pre, "A:new()"),
+    instance_method         = time(pre, "a:foo()"),
+    inherited_method        = time(pre, "b:foo()"),
+    static_method           = time(pre, "A:bar()"),
+    inherited_static_method = time(pre, "B:bar()")
+  }
 end
 
-time('class method invocation', function()
-  A:bar()
-end)
+local current_results = time_lib('middleclass')
 
-time('inherited class method invocation', function()
-  B:bar()
-end)
+for k,v in pairs(current_results) do
+  print(k,v)
+end
+
+
+
