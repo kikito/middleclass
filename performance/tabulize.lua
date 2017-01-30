@@ -4,7 +4,37 @@ local pad = function(str, len, char)
   return str .. char:rep(len - #str)
 end
 
-local tabulize = function(rows, headers)
+local Buffer = {
+  write = function(self, str)
+    self.len = self.len + 1
+    self.strings[self.len] = tostring(str)
+  end,
+  flush = function(self)
+    return table.concat(self.strings)
+  end
+}
+local newBuffer = function()
+  return setmetatable({len = 0, strings = {}}, {__index=Buffer})
+end
+
+local RowRenderer = {
+  render = function(self, row, cell_separator, blank_char)
+    for x=1, self.cols_count do
+      self.buffer:write(cell_separator)
+      self.buffer:write(pad(row[x], self.cols_len[x], blank_char))
+    end
+    self.buffer:write(cell_separator .. '\n')
+  end
+}
+local newRowRenderer = function(buffer, cols_len, cols_count)
+  return setmetatable({
+    buffer = buffer,
+    cols_len = cols_len,
+    cols_count = cols_count
+  }, {__index=RowRenderer})
+end
+
+local calculate_stats = function(rows, headers)
   local rows_count, cols_count = #rows, #headers
 
   local cols_len = {}
@@ -18,33 +48,28 @@ local tabulize = function(rows, headers)
     end
   end
 
-  local buffer, buffer_len = {}, 0
-  local write = function(str)
-    buffer_len = buffer_len + 1
-    buffer[buffer_len] = tostring(str)
-  end
-  local write_row = function(row, cell_separator, blank_char)
-    for x=1, cols_count do
-      write(cell_separator)
-      write(pad(row[x], cols_len[x], blank_char))
-    end
-    write(cell_separator .. '\n')
-  end
+  return cols_len, cols_count, rows_count
+end
 
-  local fake_row = {}
-  for x=1, cols_count do fake_row[x] = "" end
+local tabulize = function(rows, headers)
+  local cols_len, cols_count, rows_count = calculate_stats(rows, headers)
+  local buffer = newBuffer()
+  local r      = newRowRenderer(buffer, cols_len, cols_count)
 
-  write_row(fake_row, '+', '-')
-  write_row(headers,  '|', ' ')
-  write_row(fake_row, '+', '-')
+  local blank_row = {}
+  for x=1, cols_count do blank_row[x] = "" end
+
+  r:render(blank_row, '+', '-')
+  r:render(headers,   '|', ' ')
+  r:render(blank_row, '+', '-')
 
   for y=1, rows_count do
-    write_row(rows[y], '|', ' ')
+    r:render(rows[y], '|', ' ')
   end
 
-  write_row(fake_row, '+', '-')
+  r:render(blank_row, '+', '-')
 
-  return table.concat(buffer)
+  return buffer:flush()
 end
 
 return tabulize
