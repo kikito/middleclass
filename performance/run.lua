@@ -1,5 +1,5 @@
 local tabulize = require('performance.tabulize')
-local iterations = 50000
+local iterations = 700000
 
 local time = function(preparation_str, test_str)
   local code = ([[
@@ -40,7 +40,7 @@ local run_tests = function(lib_path)
 
 
   return {
-    class_creation = time(pre, "class('A')"),
+    --class_creation = time(pre, "class('A')"),
     instantiation  = time(pre, "A:new()"),
     instance_method = time(pre, "a:foo()"),
     inherited_method = time(pre, "b:foo()"),
@@ -51,21 +51,25 @@ end
 
 local versions = {'4_1', '4_0', '3_0', '2_0'}
 local headers = {'test', unpack(versions)}
-local tests = { 'class_creation', 'instantiation', 'instance_method', 'inherited_method', 'static_method', 'inherited_static_method' }
-local hash = {}
+local tests = { --'class_creation',
+                'instantiation', 'instance_method', 'inherited_method', 'static_method', 'inherited_static_method' }
+
+print(("Executing tests for %s. JIT: %s ..."):format(_VERSION, tostring(not not _G.jit)))
+
+local test_results = {}
 for i,version in ipairs(versions) do
-  hash[version] = run_tests('performance.middleclass_' .. version)
+  test_results[version] = run_tests('performance.middleclass_' .. version)
 end
 
-local data = {}
+local tabular_data = {}
 for y,test in ipairs(tests) do
-  data[y] = {tests[y]}
+  tabular_data[y] = {tests[y]}
   for x,version in ipairs(versions) do
-    data[y][x+1] = hash[version][tests[y]]
+    tabular_data[y][x+1] = test_results[version][tests[y]]
   end
 end
 
-print(tabulize(data, headers))
+print(tabulize(tabular_data, headers))
 
 
 
