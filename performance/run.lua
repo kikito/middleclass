@@ -50,6 +50,7 @@ local run_tests = function(lib_path)
 end
 
 local versions = {'4_1', '4_0', '3_0', '2_0'}
+local unpack = _G.unpack or table.unpack
 local headers = {'test', unpack(versions)}
 local tests = { --'class_creation',
                 'instantiation', 'instance_method', 'inherited_method', 'static_method', 'inherited_static_method' }
