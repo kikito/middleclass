@@ -1,4 +1,5 @@
-local iterations = 500000
+local tabulize = require('performance.tabulize')
+local iterations = 50000
 
 local time = function(preparation_str, test_str)
   local code = ([[
@@ -16,9 +17,10 @@ local time = function(preparation_str, test_str)
   return loadstring(code)()
 end
 
-local time_lib = function(lib_path)
+local run_tests = function(lib_path)
   local pre = ([[
-    local class = require '%s'
+    local lib = require '%s'
+    local class = _G.class or lib
 
     local A = class('A')
 
@@ -36,21 +38,34 @@ local time_lib = function(lib_path)
     local b = B:new()
   ]]):format(lib_path)
 
+
   return {
-    class_creation          = time(pre, "class('A')"),
-    instance_creation       = time(pre, "A:new()"),
-    instance_method         = time(pre, "a:foo()"),
-    inherited_method        = time(pre, "b:foo()"),
-    static_method           = time(pre, "A:bar()"),
+    class_creation = time(pre, "class('A')"),
+    instantiation  = time(pre, "A:new()"),
+    instance_method = time(pre, "a:foo()"),
+    inherited_method = time(pre, "b:foo()"),
+    static_method = time(pre, "A:bar()"),
     inherited_static_method = time(pre, "B:bar()")
   }
 end
 
-local current_results = time_lib('middleclass')
-
-for k,v in pairs(current_results) do
-  print(k,v)
+local versions = {'4_1', '4_0', '3_0', '2_0'}
+local headers = {'test', unpack(versions)}
+local tests = { 'class_creation', 'instantiation', 'instance_method', 'inherited_method', 'static_method', 'inherited_static_method' }
+local hash = {}
+for i,version in ipairs(versions) do
+  hash[version] = run_tests('performance.middleclass_' .. version)
 end
+
+local data = {}
+for y,test in ipairs(tests) do
+  data[y] = {tests[y]}
+  for x,version in ipairs(versions) do
+    data[y][x+1] = hash[version][tests[y]]
+  end
+end
+
+print(tabulize(data, headers))
 
 
 
