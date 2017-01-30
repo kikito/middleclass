@@ -1,19 +1,20 @@
-local pad = function(str, len)
+local pad = function(str, len, char)
   str = tostring(str)
-  return str .. (' '):rep(len - #str)
+  char = char or ' '
+  return str .. char:rep(len - #str)
 end
 
 local tabulize = function(rows, headers)
-  local rows_count, columns_count = #rows, #headers
+  local rows_count, cols_count = #rows, #headers
 
-  local column_len = {}
-  for x=1,columns_count do
-    column_len[x] = #tostring(headers[x])
+  local cols_len = {}
+  for x=1,cols_count do
+    cols_len[x] = #tostring(headers[x])
   end
   for y=1,rows_count do
     local row = rows[y]
     for x=1,#row do
-      column_len[x] = math.max(column_len[x], #tostring(row[x]))
+      cols_len[x] = math.max(cols_len[x], #tostring(row[x]))
     end
   end
 
@@ -22,35 +23,26 @@ local tabulize = function(rows, headers)
     buffer_len = buffer_len + 1
     buffer[buffer_len] = tostring(str)
   end
-
-  local separator = function()
-    for x=1, columns_count do
-      write('+')
-      write(('-'):rep(column_len[x]))
+  local write_row = function(row, cell_separator, blank_char)
+    for x=1, cols_count do
+      write(cell_separator)
+      write(pad(row[x], cols_len[x], blank_char))
     end
-    write('+\n')
+    write(cell_separator .. '\n')
   end
 
-  separator()
+  local fake_row = {}
+  for x=1, cols_count do fake_row[x] = "" end
 
-  for x=1, columns_count do
-    write('|')
-    write(pad(headers[x], column_len[x]))
-  end
-  write('|\n')
-
-  separator()
+  write_row(fake_row, '+', '-')
+  write_row(headers,  '|', ' ')
+  write_row(fake_row, '+', '-')
 
   for y=1, rows_count do
-    local row = rows[y]
-    for x=1,#row do
-      write('|')
-      write(pad(row[x], column_len[x]))
-    end
-    write('|\n')
+    write_row(rows[y], '|', ' ')
   end
 
-  separator()
+  write_row(fake_row, '+', '-')
 
   return table.concat(buffer)
 end
