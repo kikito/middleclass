@@ -47,6 +47,7 @@ local function _createIndexWrapper(aClass, f)
 end
 
 local function _propagateInstanceMethod(aClass, name, f)
+  if name == "class" then return; end;
   f = name == "__index" and _createIndexWrapper(aClass, f) or f
   aClass.__instanceDict[name] = f
 
@@ -77,6 +78,7 @@ local function _createClass(name, super)
   local aClass = { name = name, super = super, static = {},
                    __instanceDict = dict, __declaredMethods = {},
                    subclasses = setmetatable({}, {__mode='k'})  }
+  dict.class = aClass;
 
   if super then
     setmetatable(aClass.static, { __index = function(_,k) return rawget(dict,k) or super.static[k] end })
@@ -117,7 +119,7 @@ local DefaultMixin = {
   static = {
     allocate = function(self)
       assert(type(self) == 'table', "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
-      return setmetatable({ class = self }, self.__instanceDict)
+      return setmetatable({}, self.__instanceDict)
     end,
 
     new = function(self, ...)
