@@ -28,6 +28,9 @@ local middleclass = {
   ]]
 }
 
+local classes = {}; -- all non-anonymous classes indexed by classname.
+local numAnonClasses = 0;
+--
 local function _createIndexWrapper(aClass, f)
   if f == nil then
     return aClass.__instanceDict
@@ -72,10 +75,18 @@ local function _tostring(self) return "class " .. self.name end
 local function _call(self, ...) return self:new(...) end
 
 local function _createClass(name, super)
+  local n;
+  if name then
+    n = name;
+  else
+    numAnonClasses = numAnonClasses + 1;
+    n = "class#" .. numAnonClasses;
+  end;
+  
   local dict = {}
   dict.__index = dict
 
-  local aClass = { name = name, super = super, static = {},
+  local aClass = { name = n, super = super, static = {},
                    __instanceDict = dict, __declaredMethods = {},
                    subclasses = setmetatable({}, {__mode='k'})  }
   dict.class = aClass;
@@ -88,6 +99,9 @@ local function _createClass(name, super)
 
   setmetatable(aClass, { __index = aClass.static, __tostring = _tostring,
                          __call = _call, __newindex = _declareInstanceMethod })
+  if name then
+    classes[name] = aClass;
+  end;
 
   return aClass
 end
@@ -131,7 +145,7 @@ local DefaultMixin = {
 
     subclass = function(self, name)
       assert(type(self) == 'table', "Make sure that you are using 'Class:subclass' instead of 'Class.subclass'")
-      assert(type(name) == "string", "You must provide a name(string) for your class")
+      --assert(type(name) == "string", "You must provide a name(string) for your class")
 
       local subclass = _createClass(name, self)
 
@@ -167,6 +181,6 @@ function middleclass.class(name, super)
   return super and super:subclass(name) or _includeMixin(_createClass(name), DefaultMixin)
 end
 
-setmetatable(middleclass, { __call = function(_, ...) return middleclass.class(...) end })
+setmetatable(middleclass, { __call = function(_, ...) return middleclass.class(...) end, __index = classes})
 
 return middleclass
