@@ -183,4 +183,15 @@ end
 
 setmetatable(middleclass, { __call = function(_, ...) return middleclass.class(...) end, __index = classes})
 
+middleclass.class("base");
+--
+function middleclass.base:initialize(param)
+  if type(param) == "table" then 
+    for n, v in pairs(param) do
+      self[n] = v;
+    end;
+  end;
+  return self;
+end;
+
 return middleclass
