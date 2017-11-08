@@ -82,9 +82,9 @@ local function _createClass(name, super)
     setmetatable(aClass.static, {
       __index = function(_,k)
         local result = rawget(dict,k)
-        if result == nil {
+        if result == nil then
           return super.static[k]
-        }
+        end
         return result
       end
     })
