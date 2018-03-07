@@ -125,14 +125,24 @@ describe('Default methods', function()
         local o = Object:new()
         local primitives = {nil, 1, 'hello', {}, function() end, Object:new()}
 
-        for _,primitive in pairs(primitives) do
-          local theType = type(primitive)
-          describe('A ' .. theType, function()
+        describe('used as classes', function()
+          for _,primitive in pairs(primitives) do
+            local theType = type(primitive)
             it('object:isInstanceOf(, '.. theType ..') returns false', function()
-              assert.is_false(o:isInstanceOf(primitive))
+              assert.is_falsy(o:isInstanceOf(primitive))
             end)
-          end)
-        end
+          end
+        end)
+
+        describe('used as instances', function()
+          for _,primitive in pairs(primitives) do
+            local theType = type(primitive)
+            it('Object.isInstanceOf('.. theType ..', Object) returns false without error', function()
+              assert.is_falsy(Object.isInstanceOf(primitive, Object))
+            end)
+          end
+        end)
+
 
       end)
 

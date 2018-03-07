@@ -119,7 +119,12 @@ local DefaultMixin = {
   initialize   = function(self, ...) end,
 
   isInstanceOf = function(self, aClass)
-    return type(aClass) == 'table' and (aClass == self.class or self.class:isSubclassOf(aClass))
+    return type(aClass) == 'table'
+       and type(self) == 'table'
+       and (self.class == aClass
+            or type(self.class) == 'table'
+            and type(self.class.isSubclassOf) == 'function'
+            and self.class:isSubclassOf(aClass))
   end,
 
   static = {
