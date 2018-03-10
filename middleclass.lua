@@ -1,5 +1,5 @@
 local middleclass = {
-  _VERSION     = 'middleclass v4.1.0',
+  _VERSION     = 'middleclass v4.2.0',
   _DESCRIPTION = 'Object Orientation for Lua',
   _URL         = 'https://github.com/kikito/middleclass',
   _LICENSE     = [[
@@ -28,6 +28,9 @@ local middleclass = {
   ]]
 }
 
+local classes = {}; -- all non-anonymous classes indexed by classname.
+local numAnonClasses = 0;
+--
 local function _createIndexWrapper(aClass, f)
   if f == nil then
     return aClass.__instanceDict
@@ -47,6 +50,7 @@ local function _createIndexWrapper(aClass, f)
 end
 
 local function _propagateInstanceMethod(aClass, name, f)
+  if name == "class" then return; end;
   f = name == "__index" and _createIndexWrapper(aClass, f) or f
   aClass.__instanceDict[name] = f
 
@@ -71,12 +75,21 @@ local function _tostring(self) return "class " .. self.name end
 local function _call(self, ...) return self:new(...) end
 
 local function _createClass(name, super)
+  local n;
+  if name then
+    n = name;
+  else
+    numAnonClasses = numAnonClasses + 1;
+    n = "class#" .. numAnonClasses;
+  end;
+  
   local dict = {}
   dict.__index = dict
 
-  local aClass = { name = name, super = super, static = {},
+  local aClass = { name = n, super = super, static = {},
                    __instanceDict = dict, __declaredMethods = {},
                    subclasses = setmetatable({}, {__mode='k'})  }
+  dict.class = aClass;
 
   if super then
     setmetatable(aClass.static, {
@@ -94,6 +107,9 @@ local function _createClass(name, super)
 
   setmetatable(aClass, { __index = aClass.static, __tostring = _tostring,
                          __call = _call, __newindex = _declareInstanceMethod })
+  if name then
+    classes[name] = aClass;
+  end;
 
   return aClass
 end
@@ -116,7 +132,7 @@ end
 local DefaultMixin = {
   __tostring   = function(self) return "instance of " .. tostring(self.class) end,
 
-  initialize   = function(self, ...) end,
+  initialize   = function(self, ...) return self; end,
 
   isInstanceOf = function(self, aClass)
     return type(aClass) == 'table'
@@ -130,7 +146,7 @@ local DefaultMixin = {
   static = {
     allocate = function(self)
       assert(type(self) == 'table', "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
-      return setmetatable({ class = self }, self.__instanceDict)
+      return setmetatable({}, self.__instanceDict)
     end,
 
     new = function(self, ...)
@@ -142,7 +158,7 @@ local DefaultMixin = {
 
     subclass = function(self, name)
       assert(type(self) == 'table', "Make sure that you are using 'Class:subclass' instead of 'Class.subclass'")
-      assert(type(name) == "string", "You must provide a name(string) for your class")
+      --assert(type(name) == "string", "You must provide a name(string) for your class")
 
       local subclass = _createClass(name, self)
 
@@ -178,6 +194,17 @@ function middleclass.class(name, super)
   return super and super:subclass(name) or _includeMixin(_createClass(name), DefaultMixin)
 end
 
-setmetatable(middleclass, { __call = function(_, ...) return middleclass.class(...) end })
+setmetatable(middleclass, { __call = function(_, ...) return middleclass.class(...) end, __index = classes})
+
+middleclass.class("base");
+--
+function middleclass.base:initialize(param)
+  if type(param) == "table" then 
+    for n, v in pairs(param) do
+      self[n] = v;
+    end;
+  end;
+  return self;
+end;
 
 return middleclass
