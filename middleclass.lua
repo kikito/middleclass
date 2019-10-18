@@ -147,7 +147,9 @@ local DefaultMixin = {
       local subclass = _createClass(name, self)
 
       for methodName, f in pairs(self.__instanceDict) do
-        _propagateInstanceMethod(subclass, methodName, f)
+        if not (methodName == "__index" and type(f) == "table") then
+          _propagateInstanceMethod(subclass, methodName, f)
+        end
       end
       subclass.initialize = function(instance, ...) return self.initialize(instance, ...) end
 
