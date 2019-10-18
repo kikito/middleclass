@@ -31,14 +31,22 @@ local middleclass = {
 local function _createIndexWrapper(aClass, f)
   if f == nil then
     return aClass.__instanceDict
-  else
+  elseif type(f) == "function" then
     return function(self, name)
       local value = aClass.__instanceDict[name]
 
       if value ~= nil then
         return value
-      elseif type(f) == "function" then
+      else
         return (f(self, name))
+      end
+    end
+  else -- if  type(f) == "table" then
+    return function(self, name)
+      local value = aClass.__instanceDict[name]
+
+      if value ~= nil then
+        return value
       else
         return f[name]
       end
