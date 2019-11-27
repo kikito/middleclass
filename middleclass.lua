@@ -31,14 +31,22 @@ local middleclass = {
 local function _createIndexWrapper(aClass, f)
   if f == nil then
     return aClass.__instanceDict
-  else
+  elseif type(f) == "function" then
     return function(self, name)
       local value = aClass.__instanceDict[name]
 
       if value ~= nil then
         return value
-      elseif type(f) == "function" then
+      else
         return (f(self, name))
+      end
+    end
+  else -- if  type(f) == "table" then
+    return function(self, name)
+      local value = aClass.__instanceDict[name]
+
+      if value ~= nil then
+        return value
       else
         return f[name]
       end
@@ -147,7 +155,9 @@ local DefaultMixin = {
       local subclass = _createClass(name, self)
 
       for methodName, f in pairs(self.__instanceDict) do
-        _propagateInstanceMethod(subclass, methodName, f)
+        if not (methodName == "__index" and type(f) == "table") then
+          _propagateInstanceMethod(subclass, methodName, f)
+        end
       end
       subclass.initialize = function(instance, ...) return self.initialize(instance, ...) end
 
