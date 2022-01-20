@@ -100,6 +100,10 @@ describe('Metamethods', function()
       for k in pairs(v) do assert.not_table(k) end
     end)
 
+    it('instance should have a table __index if not overrided', function()
+      assert.is_true(type(debug.getmetatable(v).__index) == 'table')
+    end)
+
     --[[
     it('implements __index', function()
       assert.equal(b[1], 3)
@@ -168,6 +172,10 @@ describe('Metamethods', function()
         v2[{}] = true
         collectgarbage()
         for k in pairs(v2) do assert.not_table(k) end
+      end)
+
+      it('instance should also have a table __index if not overrided', function()
+        assert.is_true(type(debug.getmetatable(v2).__index) == 'table')
       end)
 
       it('allows inheriting further', function()
