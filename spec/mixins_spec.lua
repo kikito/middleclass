@@ -49,5 +49,12 @@ describe('A Mixin', function()
     assert.equal(Class2:bazzz(), 'bazzz')
   end)
 
+  it('"includes" returns true if mixin was included', function()
+    assert.is_true(Class1:includes(Mixin1))
+    assert.is_true(Class1:includes(Mixin2))
+    assert.is_false(Class2:includes(Mixin1))
+    assert.is_false(Class2:includes(Mixin2))
+  end)
+
 end)
 
