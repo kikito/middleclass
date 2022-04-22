@@ -146,6 +146,9 @@ local DefaultMixin = {
       assert(type(self) == 'table', "Make sure that you are using 'Class:new' instead of 'Class.new'")
       local instance = self:allocate()
       instance:initialize(...)
+      instance.includes = function (self, mixin)
+        return self.class:includes(mixin)
+      end
       return instance
     end,
 
