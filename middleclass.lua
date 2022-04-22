@@ -84,7 +84,8 @@ local function _createClass(name, super)
 
   local aClass = { name = name, super = super, static = {},
                    __instanceDict = dict, __declaredMethods = {},
-                   subclasses = setmetatable({}, {__mode='k'})  }
+                   subclasses = setmetatable({}, {__mode='k'}),
+                   mixins = {} }
 
   if super then
     setmetatable(aClass.static, {
@@ -145,6 +146,9 @@ local DefaultMixin = {
       assert(type(self) == 'table', "Make sure that you are using 'Class:new' instead of 'Class.new'")
       local instance = self:allocate()
       instance:initialize(...)
+      instance.includes = function (self, mixin)
+        return self.class:includes(mixin)
+      end
       return instance
     end,
 
@@ -177,8 +181,15 @@ local DefaultMixin = {
 
     include = function(self, ...)
       assert(type(self) == 'table', "Make sure you that you are using 'Class:include' instead of 'Class.include'")
-      for _,mixin in ipairs({...}) do _includeMixin(self, mixin) end
+      for _,mixin in ipairs({...}) do 
+        _includeMixin(self, mixin)
+        self.mixins[mixin] = true
+      end
       return self
+    end,
+
+    includes = function (self, mixin)
+      return self.mixins[mixin] ~= nil
     end
   }
 }
