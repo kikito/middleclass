@@ -1,7 +1,7 @@
 local class = require 'middleclass'
 
-describe('class()', function()
 
+describe('class()', function()
   describe('when given no params', function()
     it('it throws an error', function()
       assert.error(class)
@@ -24,5 +24,4 @@ describe('class()', function()
       assert.equal(TheSubClass.super, TheSuperClass)
     end)
   end)
-
 end)
